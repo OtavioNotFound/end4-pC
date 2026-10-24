@@ -21,7 +21,7 @@ Item {
     property int centeredWallpaperSize: Config.options.background.centeredWallpaperSize
     readonly property bool collageMode: Collage.enabled
     readonly property string shapeImagePath: root.collageMode && Config.options.background.centeredWallpaperImage !== ""
-        ? Config.options.background.centeredWallpaperImage
+        ? WallpaperResources.source(Config.options.background.centeredWallpaperImage)
         : root.wallpaperPath
     property color centeredWallpaperColor: Appearance.getColorFromName(Config.options.background.centeredWallpaperColor)
 

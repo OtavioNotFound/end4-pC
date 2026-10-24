@@ -17,6 +17,8 @@ Singleton {
     property bool sloppySearch: Config.options?.search.sloppy ?? false
     property real scoreThreshold: 0.2
     property list<string> entries: []
+    property bool availabilityKnown: false
+    property bool available: false
 
     readonly property var preparedEntries: entries.map(a => ({
         name: Fuzzy.prepare(`${a.replace(/^\s*\S+\s+/, "")}`),
@@ -130,8 +132,24 @@ Singleton {
     }
 
     function refresh() {
+        if (!root.availabilityKnown) {
+            if (!availabilityProc.running) availabilityProc.running = true
+            return
+        }
+        if (!root.available) return
         readProc.buffer = []
         readProc.running = true
+    }
+
+    Process {
+        id: availabilityProc
+        command: ["bash", "-c", 'command -v -- "$1" >/dev/null 2>&1', "cliphist-check", root.cliphistBinary]
+        onExited: code => {
+            root.availabilityKnown = true
+            root.available = code === 0
+            if (root.available) root.refresh()
+            else console.warn("[Cliphist] Clipboard history unavailable; install cliphist to enable it. / Instale cliphist para habilitar o histórico.")
+        }
     }
 
     function copy(entry) {

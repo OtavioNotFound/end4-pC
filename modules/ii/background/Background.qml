@@ -22,8 +22,8 @@ Variants {
         id: bgRoot
 
         required property var modelData
-        property string currentWallpaperSource: Config.options.background.wallpaperPath
-        property string previousWallpaperSource: Config.options.background.wallpaperPath
+        property string currentWallpaperSource: ""
+        property string previousWallpaperSource: ""
         property bool videoRevealed: false
 
         readonly property real splitFraction: {
@@ -58,10 +58,17 @@ Variants {
         }
 
         property bool wallpaperIsVideo: bgRoot.effectiveWallpaperPath.endsWith(".mp4") || bgRoot.effectiveWallpaperPath.endsWith(".webm") || bgRoot.effectiveWallpaperPath.endsWith(".mkv") || bgRoot.effectiveWallpaperPath.endsWith(".avi") || bgRoot.effectiveWallpaperPath.endsWith(".mov")
-        property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : bgRoot.effectiveWallpaperPath
+        property string wallpaperPath: {
+            const image = wallpaperIsVideo ? Config.options.background.thumbnailPath : bgRoot.effectiveWallpaperPath
+            // Picker previews remain immediate; persisted resources are checked once.
+            if (!GlobalStates.screenLocked && (Wallpapers.previewPath || Wallpapers.confirmedPath) && !wallpaperIsVideo)
+                return image
+            return GlobalStates.screenLocked && Config.options.background.lockWall !== ""
+                ? WallpaperResources.lockSource : WallpaperResources.desktopSource
+        }
         property bool wallpaperSafetyTriggered: {
             const enabled = Config.options.workSafety.enable.wallpaper;
-            const sensitiveWallpaper = (CF.StringUtils.stringListContainsSubstring(wallpaperPath.toLowerCase(), Config.options.workSafety.triggerCondition.fileKeywords));
+            const sensitiveWallpaper = (CF.StringUtils.stringListContainsSubstring(bgRoot.effectiveWallpaperPath.toLowerCase(), Config.options.workSafety.triggerCondition.fileKeywords));
             const sensitiveNetwork = (CF.StringUtils.stringListContainsSubstring(Network.networkName.toLowerCase(), Config.options.workSafety.triggerCondition.networkNameKeywords));
             return enabled && sensitiveWallpaper && sensitiveNetwork;
         }
@@ -100,6 +107,8 @@ Variants {
             right: true
         }
         color: {
+            if (bgRoot.wallpaperPath === "" && !bgRoot.wallpaperIsVideo)
+                return Appearance.colors.colLayer0Base;
             if (!bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo)
                 return "transparent";
             return CF.ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colPrimary, 0.75);

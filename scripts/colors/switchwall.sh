@@ -433,10 +433,11 @@ switch() {
         done
     fi
 
-    matugen "${matugen_args[@]}"
+    local matugen_status=0
+    matugen "${matugen_args[@]}" || matugen_status=$?
 
     if [[ -n "$colors_lock_flag" ]]; then
-        if [[ -f "$colors_json_path" ]]; then
+        if [[ "$matugen_status" -eq 0 && -f "$colors_json_path" ]]; then
             cp "$colors_json_path" "$colors_lock_json_path"
         fi
         for i in "${!colors_lock_watch_paths[@]}"; do
@@ -448,7 +449,12 @@ switch() {
         done
     fi
 
-    source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
+    if [[ "$matugen_status" -ne 0 ]]; then
+        echo "[switchwall] matugen failed (exit $matugen_status); color generation stopped" >&2
+        return "$matugen_status"
+    fi
+
+    source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate" || return 1
 
     if [[ -n "$colors_lock_flag" ]]; then
         output_scss="$STATE_DIR/user/generated/material_colors_lock.scss"
@@ -456,12 +462,19 @@ switch() {
         output_scss="$STATE_DIR/user/generated/material_colors.scss"
     fi
 
-    python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
-        > "$output_scss"
+    local scss_tmp
+    scss_tmp=$(mktemp "${output_scss}.XXXXXX") || { deactivate; return 1; }
+    if ! python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" > "$scss_tmp" || [ ! -s "$scss_tmp" ]; then
+        rm -f "$scss_tmp"
+        deactivate
+        echo "[switchwall] Color generation failed; previous SCSS preserved" >&2
+        return 1
+    fi
+    mv "$scss_tmp" "$output_scss"
     deactivate
 
     if [[ -z "$colors_lock_flag" ]]; then
-        "$SCRIPT_DIR"/applycolor.sh
+        "$SCRIPT_DIR"/applycolor.sh || return 1
         update_icon_scheme "$mode_flag"
     fi
 

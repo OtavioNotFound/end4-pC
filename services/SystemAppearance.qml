@@ -25,7 +25,20 @@ Singleton {
     readonly property string iconResolverPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/icon-resolve.py`)
 
     function defaultIconPath(name, fallback) {
-        return fallback === undefined ? Quickshell.iconPath(name) : Quickshell.iconPath(name, fallback)
+        if (name && (name.startsWith("/") || name.startsWith("file:")))
+            return name
+        const found = name ? Quickshell.iconPath(name, true) : ""
+        if (found) return found
+        const bundled = {
+            "cachyos": "cachyos-symbolic", "cachyos-symbolic": "cachyos-symbolic",
+            "arch-symbolic": "arch-symbolic", "user-desktop": "desktop-symbolic",
+            "image-missing": "desktop-symbolic"
+        }
+        if (typeof bundled[name] === "string") return Qt.resolvedUrl(`${Directories.assetsPath}/icons/${bundled[name]}.svg`).toString()
+        if (fallback === true) return ""
+        if (typeof fallback === "string" && fallback !== name)
+            return root.defaultIconPath(fallback, false)
+        return Qt.resolvedUrl(`${Directories.assetsPath}/icons/desktop-symbolic.svg`).toString()
     }
 
     function iconPath(name, fallback) {

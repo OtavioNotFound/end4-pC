@@ -193,6 +193,7 @@ Singleton {
 
     FileView {
         id: orderFileView
+        printErrors: false // Optional ordering file; onLoadFailed uses default order.
         path: `${Directories.shellConfig}/wallpaper_order.json`
         watchChanges: false
         onLoaded: {

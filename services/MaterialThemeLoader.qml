@@ -21,13 +21,27 @@ Singleton {
     }
 
     function applyColors(fileContent) {
-        const json = JSON.parse(fileContent)
+        let json
+        try {
+            json = JSON.parse(fileContent)
+            if (!json || Array.isArray(json) || typeof json !== "object" || Object.keys(json).length === 0)
+                throw new Error("Expected a non-empty color object")
+            // Validate all supported roles before changing any of the palette.
+            for (const key of Object.keys(json)) {
+                const role = `m3${key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`
+                if (role in Appearance.m3colors && (typeof json[key] !== "string" || !/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(json[key])))
+                    throw new Error(`Invalid color: ${key}`)
+            }
+        } catch (error) {
+            console.warn("[MaterialThemeLoader] Keeping last valid palette:", root.filePath, error.message)
+            return
+        }
         for (const key in json) {
             if (json.hasOwnProperty(key)) {
                 // Convert snake_case to CamelCase
                 const camelCaseKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
                 const m3Key = `m3${camelCaseKey}`
-                Appearance.m3colors[m3Key] = json[key]
+                if (m3Key in Appearance.m3colors) Appearance.m3colors[m3Key] = json[key]
             }
         }
         Appearance.m3colors.darkmode = (Appearance.m3colors.m3background.hslLightness < 0.5)
@@ -75,11 +89,12 @@ Singleton {
         id: themeFileView
         path: Qt.resolvedUrl(root.filePath)
         watchChanges: true
+        printErrors: false
         onFileChanged: {
             this.reload()
             delayedFileRead.start()
         }
-        onLoadedChanged: {
+        onLoaded: {
             const fileContent = themeFileView.text()
             root.applyColors(fileContent)
         }

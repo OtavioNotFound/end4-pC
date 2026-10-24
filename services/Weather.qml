@@ -27,6 +27,7 @@ Singleton {
     })
 
     property var data: ({
+        description: "",
         uv: 0,
         humidity: 0,
         sunrise: 0,

@@ -173,8 +173,7 @@ Item {
 
     readonly property string wallpaper: {
         const lockWall = Config.options.background.lockWall ?? ""
-        const path = GlobalStates.screenLocked && lockWall !== "" ? lockWall : Config.options.background.wallpaperPath
-        return /\.(mp4|webm|mkv|avi|mov)$/.test(path) ? Config.options.background.thumbnailPath : path
+        return GlobalStates.screenLocked && lockWall !== "" ? WallpaperResources.lockSource : WallpaperResources.desktopSource
     }
 
     Loader {
@@ -189,7 +188,7 @@ Item {
                 height: root.scr.height
                 x: -(root.winX + root.origin.x)
                 y: -(root.winY + root.origin.y)
-                source: "file://" + root.wallpaper
+                source: root.wallpaper
                 fillMode: Image.PreserveAspectCrop
                 sourceSize: Qt.size(Math.ceil(root.scr.width * root.scr.devicePixelRatio), Math.ceil(root.scr.height * root.scr.devicePixelRatio))
                 asynchronous: true
