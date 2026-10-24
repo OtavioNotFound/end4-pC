@@ -6,6 +6,13 @@ separa dependência obrigatória, opcional e arquivos ainda não gerados.
 Validação de schema é direcionada aos campos críticos; não certifica todos os
 valores aninhados do JSON. Versões são informadas sem inventar compatibilidade.
 
+Na interface da fase 2, abra **Verificar configuração** no dashboard ou em
+**Sobre** nos estilos tradicional/mínimo. A tela reutiliza o mesmo doctor e
+mostra caminhos de imagens problemáticas localmente. Essa saída privada não é
+um relatório para compartilhar; a CLI `--report` continua omitindo os caminhos.
+Se o JSON impedir a shell de iniciar, use a recuperação CLI descrita em
+[presets](presets.md); a nova tela não substitui esse procedimento.
+
 ## Fluxo de decisão
 
 ```text

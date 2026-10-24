@@ -2,6 +2,13 @@
 
 ## Uso normal
 
+Na fase 2, **Salvar como** na interface cria um novo preset e recusa um nome
+já existente. Para substituir um preset, use **Sobrescrever** nos detalhes ou
+no menu e confirme no segundo clique. O texto digitado permanece se a gravação
+falhar. “Exportado”, “Instalado” e “Sobrescrito” só aparecem após conclusão do
+processo. O comando legado `--save` continua aceitando sobrescrita explícita;
+`--create-only` oferece criação exclusiva para scripts que precisam dela.
+
 Use Dashboard → Presets para salvar, aplicar, instalar, importar/exportar,
 renomear e excluir. O desenho dessa página foi preservado. Este fork retorna
 erros por notificações existentes. Falhas de download também aparecem no

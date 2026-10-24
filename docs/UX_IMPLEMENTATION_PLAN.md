@@ -106,3 +106,9 @@ Evoluir welcome.qml/FirstRunExperience existentes, não criar um segundo wizard.
 Opt-in, pular etapas, retomar depois, preservar configurações e pedir consentimento
 antes de aplicar wallpaper/preset. Integrar páginas/diagnóstico existentes.
 Viável tecnicamente; não prioritário sobre o painel atual.
+
+## Estado desta entrega
+
+P0.1–P0.4 implementados no escopo descrito, com resultados e limites em
+[UX_DELIVERY_REPORT.md](UX_DELIVERY_REPORT.md). O aceite de compositor/visual
+continua separado e pendente. P1/P2 não estão incluídos no status de conclusão.

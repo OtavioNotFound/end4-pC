@@ -91,3 +91,32 @@ modo de monitor e efeitos externos precisam de teste na sessão real.
 - Sem redesign de barra/dock/widgets, sem novo editor de widgets e sem libs pesadas.
 - Baseline automatizada: runner da fase 1; resultados novos e validação manual
   serão registrados em `UX_DELIVERY_REPORT.md`, sem alegar aceite visual.
+
+## Descobertas adicionais durante a validação incremental
+
+- **U25 P0 — debounce global alterado pela UI:** `SettingsContent.Component.onCompleted`
+  definia `Config.readWriteDelay = 0`, inclusive enquanto o painel estava oculto.
+  Removida essa alteração global; o debounce de 50 ms e o flush transacional
+  da fase 1 permanecem como fonte de verdade.
+- **U26 P0 — card de estilos em janela estreita:** `baseSpan("style")` fixava
+  duas colunas, enquanto `DashboardStyleCard` contém três alternativas e quatro
+  botões de velocidade. Renderização offscreen 900×600 confirmou conteúdo
+  invadindo o card vizinho. O mesmo card agora ocupa quatro colunas quando a
+  largura lógica do painel é menor que 1200; acima disso conserva o span original.
+- **U27 P0 — combo indicando opção errada:** `DashboardComboCard.currentIndex`
+  retornava 0 se o valor ativo não existisse na lista. Agora conserva -1 e exibe
+  o valor atual, sem selecionar implicitamente a primeira alternativa.
+- **U28 P0 — ativação por teclado incompleta:** vários cards usavam `downAction`,
+  chamada apenas pelo MouseArea de RippleButton. Os controles alterados usam
+  `onClicked` para a mesma ação também responder à ativação nativa por teclado.
+  Não foi alterado o comportamento global de RippleButton fora das configurações.
+
+- **U29 P1 — galeria duplicada já existente:** `pages/Profile.qml` contém
+  fetch/listagem de presets próprios, paralelos a `services/PresetsOnline.qml`.
+  A aplicação final reutiliza o backend de presets, mas a coleta de assets
+  desse fluxo legado ainda precisa de unificação e teste de compatibilidade.
+  Não foi criada uma terceira implementação nesta fase.
+- A matriz offscreen em PT-BR reproduziu overflow também em 1100×680, devido
+  aos textos mais longos. O limiar responsivo foi ajustado para 1200 unidades
+  lógicas; o seletor de estilo passou ao grupo Geral, depois dos atalhos
+  frequentes. Glassy UI e transparência ganham precedência no painel inicial.

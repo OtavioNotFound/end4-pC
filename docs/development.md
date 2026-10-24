@@ -39,6 +39,7 @@ Comandos individuais:
 ```sh
 python3 -m unittest discover -s tests/icon_theme_manager -v
 python3 -m unittest discover -s tests/presets -v
+python3 -m unittest discover -s tests/settings -v
 ```
 
 Os testes usam diretórios temporários. A shell mínima de teste copia os

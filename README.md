@@ -18,6 +18,9 @@ Customized and maintained by **pctrade**
 The original screenshots and visual design are retained. See
 [validation status](docs/validation.md) for verified behavior and remaining graphical checks.
 
+**Settings UX, phase 2 (local development):** [Audit](docs/UX_AUDIT.md) ·
+[Implementation plan](docs/UX_IMPLEMENTATION_PLAN.md) · [Delivery report](docs/UX_DELIVERY_REPORT.md).
+
 </div>
 
 ---

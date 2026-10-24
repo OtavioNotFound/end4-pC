@@ -8,14 +8,14 @@ Rótulos são os originais em inglês; traduções ficam nos JSONs existentes.
 
 ### Bar / Bar layout
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:187`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:187`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
 | `bar:Layout editor` | Bar layout | barlayout  |
 ### Bar / Positioning & Styles
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:192`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:192`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -42,7 +42,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:207`. requires: "dynami
 | `bar:Show media controls` | Media controls | toggle  |
 ### Bar / Notifications
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:215`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:215`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -136,7 +136,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:283`. requires: "media"
 | `bar:Max media width` | Max media width | spin  |
 ### Interface / Transparency
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:291`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:291`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -145,7 +145,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:291`.
 | `interface:Transparency/Content` | Content | slider  |
 ### Interface / Left Sidebar
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:298`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:298`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -157,7 +157,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:298`.
 | `interface:Weeb policy` | Weeb | select  |
 ### Interface / Right Sidebar
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:308`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:308`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -173,7 +173,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:308`.
 | `interface:Microphone` | Mic slider | toggle  |
 ### Interface / Hot Corners
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:322`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:322`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -190,7 +190,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:322`.
 | `interface:Hot corner bottom-right` | Bottom-right | combo  |
 ### Interface / Overview
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:337`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:337`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -204,7 +204,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:337`.
 | `interface:Overview order vertical` | Vertical order | select  |
 ### Interface / Dock
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:349`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:349`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -221,7 +221,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:349`.
 | `interface:Dock/Icon spacing` | Icon spacing | spin  |
 ### Interface / Dock style
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:364`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:364`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -237,7 +237,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:364`.
 | `interface:Dock/Background color` | Background color | swatch  |
 ### Interface / Lock screen
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:378`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:378`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -255,7 +255,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:378`.
 | `interface:Extra wallpaper zoom (%)` | Wallpaper zoom (%) | spin  |
 ### Interface / Overlay
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:394`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:394`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -266,7 +266,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:394`.
 | `interface:Timeout (ms)` | OSD timeout (ms) | spin  |
 ### Interface / Wallpaper selector
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:403`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:403`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -281,7 +281,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:403`.
 | `interface:Live wallpaper folder` | Live wallpaper folder | text  |
 ### Desktop / Wallpaper
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:416`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:416`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -295,7 +295,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:416`.
 | `desktop:Transitions` | Transitions | combo  |
 ### Desktop / Centered wallpaper
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:428`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:428`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -306,7 +306,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:428`.
 | `desktop:Centered shape` | Shape | shape  |
 ### Desktop / Multiple wallpapers
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:437`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:437`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -317,14 +317,14 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:437`.
 | `desktop:Collage radius` | Corner radius | spin  |
 ### Desktop / Desktop widgets
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:446`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:446`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
 | `desktop:Widgets` | Desktop widgets | widgets  |
 ### Desktop / Clock
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:451`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:451`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -385,7 +385,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:497`. when: "clockpixel
 | `desktop:Pixel clock orientation` | Orientation | select  |
 ### Desktop / Quote
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:502`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:502`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -394,7 +394,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:502`.
 | `desktop:Quote text` | Quote | text  |
 ### Desktop / Custom image
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:509`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:509`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -404,7 +404,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:509`.
 | `desktop:Image card layout` | Image card layout | select  |
 ### Desktop / Visualizer
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:517`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:517`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -416,7 +416,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:517`.
 | `desktop:Visualizer size` | Ring size | slider  |
 ### Desktop / Text
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:527`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:527`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -431,7 +431,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:527`.
 | `desktop:Text color` | Color | swatch  |
 ### Desktop / Canvas
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:540`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:540`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -439,7 +439,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:540`.
 | `desktop:Show snap lines when dropping` | Snap lines | toggle  |
 ### General / System Appearance
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:546`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:546`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -455,7 +455,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:546`.
 | `general:Monospace font size` | Mono font size | spin  |
 ### General / Time
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:560`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:560`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -465,7 +465,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:560`.
 | `general:Format` | Time format | select  |
 ### General / Battery
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:568`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:568`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -475,7 +475,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:568`.
 | `general:Automatic suspend` | Automatic suspend | toggle  |
 ### General / Audio
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:576`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:576`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -484,7 +484,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:576`.
 | `general:Volume limit` | Volume limit | spin  |
 ### General / Sounds
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:583`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:583`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -500,14 +500,14 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:583`.
 | `interface:Football/Volume` | Sound volume | spin when: "football" |
 ### General / Language
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:597`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:597`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
 | `general:Interface language` | Interface language | combo  |
 ### General / Work safety
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:602`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:602`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -671,7 +671,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:730`. when: "hyprland"
 | `hyprland:Presets` | Animation presets | select  |
 ### Services / Music Recognition
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:736`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:736`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -679,7 +679,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:736`.
 | `services:Polling interval (s)` | Polling interval (s) | spin  |
 ### Services / Save paths
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:742`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:742`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -687,7 +687,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:742`.
 | `services:Screenshot path` | Screenshot path (empty = copy) | text  |
 ### Services / Search
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:748`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:748`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -704,14 +704,14 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:748`.
 | `services:Prefix keybinds` | Prefix: Keybinds | text  |
 ### Services / Webapps
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:763`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:763`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
 | `services:Webapps` | Webapps | webapps  |
 ### Services / System updates (Arch)
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:768`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:768`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
@@ -719,7 +719,7 @@ Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:768`.
 | `services:Check interval (mins)` | Check interval (min) | spin  |
 ### Services / Weather
 
-Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:774`. 
+Fonte: `modules/ii/settings/DashboardSettingsCatalog.qml:774`.
 
 | Chave estável | Rótulo | Tipo / condição |
 |---|---|---|
