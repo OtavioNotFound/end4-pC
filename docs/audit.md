@@ -9,7 +9,7 @@ Não foi criado fork remoto. Nenhum comando de publicação foi executado.
 
 Inventário da árvore, README, licença, histórico recente e revisão dos caminhos
 críticos de presets, configuração, recursos, renderização, ícones e serviços.
-Isso não equivale a revisar individualmente todas as linhas dos 959 arquivos
+Isso não equivale a revisar individualmente todas as linhas dos 860 arquivos
 versionados nem a uma certificação de segurança de toda a shell.
 
 `shell.qml` inicializa serviços singleton e `IllogicalImpulseFamily` carrega os

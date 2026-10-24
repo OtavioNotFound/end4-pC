@@ -19,7 +19,7 @@ DashboardCard {
     readonly property string helpText: {
         if (controlKey === "interface:Glassy UI") {
             const path = Config.options.background.wallpaperPath
-            if (path && WallpaperResources.resources[path]?.issue)
+            if (!WallpaperResources.desktopSource || WallpaperResources.resources[path]?.issue)
                 return Translation.tr("Wallpaper unavailable. Check its path before using Glassy UI. Changes apply immediately.")
             return Translation.tr("Glassy UI samples the wallpaper. It requires a valid image; compositor blur is a separate setting. Changes apply immediately.")
         }
