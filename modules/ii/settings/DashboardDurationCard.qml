@@ -8,7 +8,10 @@ DashboardCard {
     id: root
 
     property string controlKey: ""
+    property string unavailableReason: SettingsHelp.disabledReason(controlKey, "", "")
     property string title: ""
+    Accessible.name: root.title
+    Accessible.description: controlHelp.text
     property string icon: "timer"
     property var tileShape: MaterialShape.Shape.Clover4Leaf
     property var override: null
@@ -40,6 +43,7 @@ DashboardCard {
     }
 
     function commit(value, newUnit) {
+        if (!control || root.unavailableReason) return;
         const total = Math.max(0, Math.round(value)) * newUnit;
         Qt.callLater(() => control.set(total));
     }
@@ -93,6 +97,8 @@ DashboardCard {
                 model: [-1]
 
                 delegate: RippleButton {
+                    enabled: root.unavailableReason === ""
+                    Accessible.name: root.title
                     required property int modelData
 
                     implicitWidth: 40
@@ -101,7 +107,7 @@ DashboardCard {
                     colBackground: Qt.rgba(1, 1, 1, 0.14)
                     colBackgroundHover: Qt.rgba(1, 1, 1, 0.26)
                     colRipple: Qt.rgba(1, 1, 1, 0.35)
-                    downAction: () => root.commit(root.displayValue + modelData, root.unit)
+                    onClicked: root.commit(root.displayValue + modelData, root.unit)
                     contentItem: Item {
                         MaterialSymbol {
                             anchors.centerIn: parent
@@ -117,6 +123,8 @@ DashboardCard {
                 model: root.units
 
                 delegate: RippleButton {
+                    enabled: root.unavailableReason === ""
+                    Accessible.name: root.title
                     id: unitButton
                     required property var modelData
 
@@ -129,7 +137,7 @@ DashboardCard {
                     colBackground: selected ? Appearance.colors.colTertiary : Qt.rgba(1, 1, 1, 0.12)
                     colBackgroundHover: selected ? Appearance.colors.colTertiary : Qt.rgba(1, 1, 1, 0.22)
                     colRipple: Qt.rgba(1, 1, 1, 0.3)
-                    downAction: () => {
+                    onClicked: {
                         root.unit = modelData.value;
                         root.commit(root.displayValue, modelData.value);
                     }
@@ -148,6 +156,8 @@ DashboardCard {
                 model: [1]
 
                 delegate: RippleButton {
+                    enabled: root.unavailableReason === ""
+                    Accessible.name: root.title
                     required property int modelData
 
                     implicitWidth: 40
@@ -156,7 +166,7 @@ DashboardCard {
                     colBackground: Qt.rgba(1, 1, 1, 0.14)
                     colBackgroundHover: Qt.rgba(1, 1, 1, 0.26)
                     colRipple: Qt.rgba(1, 1, 1, 0.35)
-                    downAction: () => root.commit(root.displayValue + modelData, root.unit)
+                    onClicked: root.commit(root.displayValue + modelData, root.unit)
                     contentItem: Item {
                         MaterialSymbol {
                             anchors.centerIn: parent
@@ -168,5 +178,11 @@ DashboardCard {
                 }
             }
         }
+    }
+    SettingsControlHelp {
+        id: controlHelp
+        anchors.fill: parent
+        controlKey: root.controlKey
+        reason: root.unavailableReason
     }
 }

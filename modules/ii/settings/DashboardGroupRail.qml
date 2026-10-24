@@ -69,6 +69,12 @@ ColumnLayout {
                     colBackgroundToggledHover: ColorUtils.mix(box.modelData.accent, box.modelData.onAccent, 0.9)
                     colRippleToggled: ColorUtils.mix(box.modelData.accent, box.modelData.onAccent, 0.8)
                     onClicked: root.picked(box.modelData.id)
+                    Accessible.name: box.modelData.name
+                    StyledToolTip {
+                        text: box.modelData.name
+                        extraVisibleCondition: button.hovered || button.activeFocus
+                        maximumContentWidth: 240
+                    }
 
                     Behavior on buttonRadius {
                         SpringAnimation { spring: 4 * root.speed; damping: 0.22 }
@@ -91,6 +97,11 @@ ColumnLayout {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.bottomMargin: 6
                             text: box.modelData.name
+                            Layout.maximumWidth: root.boxSize - 6
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.weight: Font.DemiBold
                             color: box.on ? box.modelData.onAccent : box.modelData.onContainer

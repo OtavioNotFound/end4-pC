@@ -111,7 +111,7 @@ DashboardCard {
                         colBackground: tile.on ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer2
                         colBackgroundHover: tile.on ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colLayer2Hover
                         colRipple: tile.on ? Appearance.colors.colPrimaryContainerActive : Appearance.colors.colLayer2Active
-                        downAction: () => {
+                        onClicked: {
                             const key = tile.modelData.key;
                             const next = !tile.on;
                             Qt.callLater(() => DesktopWidgets.setEnabled(key, next));
@@ -161,7 +161,7 @@ DashboardCard {
                         colBackground: "transparent"
                         colBackgroundHover: tile.on ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colLayer2Hover
                         colRipple: tile.on ? Appearance.colors.colPrimaryContainerActive : Appearance.colors.colLayer2Active
-                        downAction: () => {
+                        onClicked: {
                             const key = tile.modelData.key;
                             starPop.restart();
                             Qt.callLater(() => DesktopWidgets.toggleStar(key));

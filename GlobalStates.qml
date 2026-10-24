@@ -35,8 +35,11 @@ Singleton {
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
     property var settingsTarget: null
+    property bool settingsDetailedView: false
+    onSettingsOpenChanged: if (!settingsOpen) settingsDetailedView = false
 
     function openSettingsAt(pageId, label, section, subsection) {
+        root.settingsDetailedView = Config.options.settings.style === "dashboard";
         root.settingsOpen = true;
         Qt.callLater(() => {
             root.settingsTarget = { page: pageId, label: label ?? "", section: section ?? "", subsection: subsection ?? "" };

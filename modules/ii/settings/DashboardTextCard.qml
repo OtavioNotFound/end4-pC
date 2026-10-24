@@ -8,7 +8,10 @@ DashboardCard {
     id: root
 
     property string controlKey: ""
+    property string unavailableReason: SettingsHelp.disabledReason(controlKey, "", "")
     property string title: ""
+    Accessible.name: root.title
+    Accessible.description: controlHelp.text
     property string icon: "edit"
     property var tileShape: MaterialShape.Shape.Slanted
     property var override: null
@@ -28,7 +31,7 @@ DashboardCard {
         id: debounce
         interval: 600
         onTriggered: {
-            if (root.control && field.text !== root.current) root.control.set(field.text);
+            if (root.control && !root.unavailableReason && field.text !== root.current) root.control.set(field.text);
         }
     }
 
@@ -71,6 +74,7 @@ DashboardCard {
                 MouseArea {
                     anchors.fill: parent
                     anchors.margins: -8
+                    enabled: root.unavailableReason === ""
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         if (field.activeFocus) {
@@ -103,6 +107,9 @@ DashboardCard {
 
             TextInput {
                 id: field
+                readOnly: root.unavailableReason !== ""
+                Accessible.name: root.title
+                Accessible.description: controlHelp.text
                 anchors.fill: parent
                 anchors.leftMargin: 16
                 anchors.rightMargin: 16
@@ -133,5 +140,11 @@ DashboardCard {
                 }
             }
         }
+    }
+    SettingsControlHelp {
+        id: controlHelp
+        anchors.fill: parent
+        controlKey: root.controlKey
+        reason: root.unavailableReason
     }
 }

@@ -133,7 +133,7 @@ DashboardCard {
                 colBackground: Appearance.colors.colSecondaryContainer
                 colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                 colRipple: Appearance.colors.colSecondaryContainerActive
-                downAction: () => Qt.callLater(() => ColorSchemes.addScheme())
+                onClicked: Qt.callLater(() => ColorSchemes.addScheme())
                 contentItem: RowLayout {
                     spacing: 6
                     MaterialSymbol {
@@ -202,7 +202,7 @@ DashboardCard {
                             colBackground: surfaceColor
                             colBackgroundHover: Qt.lighter(surfaceColor, 1.1)
                             colRipple: Qt.rgba(1, 1, 1, 0.25)
-                            downAction: () => {
+                            onClicked: {
                                 const value = modelData.value;
                                 Qt.callLater(() => ColorSchemes.setScheme(value, false));
                             }

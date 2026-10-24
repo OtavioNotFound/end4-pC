@@ -138,6 +138,7 @@ ContentPage {
             GroupedList {
                 ConfigSwitch {
                     text: Translation.tr("Use Levenshtein distance-based algorithm instead of fuzzy")
+                    description: SettingsHelp.text("services:Use Levenshtein distance-based algorithm instead of fuzzy")
                     checked: Config.options.search.sloppy
                     onCheckedChanged: {
                         Config.options.search.sloppy = checked;

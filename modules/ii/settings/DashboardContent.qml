@@ -101,7 +101,7 @@ Item {
 
     Keys.onPressed: event => {
         if (editingText) {
-            event.accepted = true;
+            event.accepted = false;
             return;
         }
         if (event.key === Qt.Key_Escape) {
@@ -140,9 +140,9 @@ Item {
             moveSelection(0, 1);
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
             activateSelected();
-        } else if (event.key === Qt.Key_Tab) {
+        } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
             goToPage((pendingPage + 1) % pageNames.length);
-        } else if (event.key === Qt.Key_Backtab) {
+        } else if (event.key === Qt.Key_Backtab && (event.modifiers & Qt.ControlModifier)) {
             goToPage((pendingPage - 1 + pageNames.length) % pageNames.length);
         } else if (currentPage === homePage && homeLoader.item?.typing) {
             return;

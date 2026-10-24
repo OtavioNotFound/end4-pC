@@ -136,7 +136,6 @@ QtObject {
         "desktop:Visualizer sensitivity": { type: "slider", get: () => Config.options.background.widgets.visualizer.sensitivity * 100, set: v => { Config.options.background.widgets.visualizer.sensitivity = Math.round(v) / 100; }, from: 50, to: 300, stopIndicatorValues: [], usePercentTooltip: false },
         "desktop:Visualizer height": { type: "slider", get: () => Config.options.background.widgets.visualizer.height, set: v => { Config.options.background.widgets.visualizer.height = Math.round(v); }, from: 120, to: 600, stopIndicatorValues: [], usePercentTooltip: false },
         "desktop:Visualizer size": { type: "slider", get: () => Config.options.background.widgets.visualizer.ringSize, set: v => { Config.options.background.widgets.visualizer.ringSize = Math.round(v); }, from: 200, to: 900, stopIndicatorValues: [], usePercentTooltip: false },
-        "interface:Glassy UI": { type: "switch", get: () => Config.options.background.widgets.glass.enable, set: v => { Config.options.background.widgets.glass.enable = v; } },
         "desktop:Text enable": { type: "switch", get: () => Config.options.background.widgets.customText.enable, set: v => { Config.options.background.widgets.customText.enable = v; } },
         "desktop:Text shadow": { type: "switch", get: () => Config.options.background.widgets.customText.shadow, set: v => { Config.options.background.widgets.customText.shadow = v; } },
         "desktop:Text auto colors": { type: "switch", get: () => Config.options.background.widgets.customText.color === "", set: v => { Config.options.background.widgets.customText.color = v ? "" : "primary"; } },
@@ -346,7 +345,7 @@ QtObject {
             ]
         },
         {
-            page: Translation.tr("Interface"), title: Translation.tr("Dock"), icon: "dock_to_bottom", cards: [
+            page: Translation.tr("Bar"), title: Translation.tr("Dock"), icon: "dock_to_bottom", cards: [
                 { type: "toggle", key: "interface:Dock/Enable", title: Translation.tr("Enable"), icon: "dock_to_bottom" },
                 { type: "toggle", key: "interface:Dock/Background", title: Translation.tr("Background"), icon: "layers" },
                 { type: "toggle", key: "interface:Hover to reveal", title: Translation.tr("Hover to reveal"), icon: "visibility" },
@@ -361,7 +360,7 @@ QtObject {
             ]
         },
         {
-            page: Translation.tr("Interface"), title: Translation.tr("Dock style"), icon: "call_to_action", cards: [
+            page: Translation.tr("Bar"), title: Translation.tr("Dock style"), icon: "call_to_action", cards: [
                 { type: "select", key: "interface:Dock/Style", title: Translation.tr("Style"), icon: "dock_to_bottom", kw: "dock hug float attached screen edge frame" },
                 { type: "select", key: "interface:Dock/Position", title: Translation.tr("Position"), icon: "dock_to_bottom", kw: "dock position left right bottom side edge" },
                 { type: "spin", key: "interface:Dock/Radius", title: Translation.tr("Corner radius"), icon: "rounded_corner" },
@@ -400,7 +399,7 @@ QtObject {
             ]
         },
         {
-            page: Translation.tr("Interface"), title: Translation.tr("Wallpaper selector"), icon: "wallpaper", cards: [
+            page: Translation.tr("Desktop"), title: Translation.tr("Wallpaper selector"), icon: "wallpaper", cards: [
                 { type: "toggle", key: "interface:Use system file picker", title: Translation.tr("System file picker"), icon: "ad" },
                 { type: "toggle", key: "interface:Show home directory in quick access", title: Translation.tr("Home in quick access"), icon: "home" },
                 { type: "toggle", key: "interface:Close after selection", title: Translation.tr("Close after selection"), icon: "done" },

@@ -8,7 +8,10 @@ DashboardCard {
     id: root
 
     property string controlKey: ""
+    property string unavailableReason: SettingsHelp.disabledReason(controlKey, "", "")
     property string title: ""
+    Accessible.name: root.title
+    Accessible.description: controlHelp.text
     property string icon: "tune"
     property var tileShape: MaterialShape.Shape.Gem
 
@@ -19,7 +22,7 @@ DashboardCard {
     tint: Appearance.colors.colPrimaryContainer
 
     function step(direction) {
-        if (!control) return;
+        if (!control || root.unavailableReason) return;
         const stepSize = control.stepSize ?? 1;
         const next = Math.max(control.from ?? -Infinity, Math.min(control.to ?? Infinity, current + direction * stepSize));
         Qt.callLater(() => control.set(next));
@@ -72,6 +75,8 @@ DashboardCard {
                     implicitHeight: 40
 
                     RippleButton {
+                        enabled: root.unavailableReason === ""
+                        Accessible.name: root.title + (modelData === 1 ? " +" : " −")
                         anchors.right: modelData === 1 ? parent.right : undefined
                         implicitWidth: 40
                         implicitHeight: 40
@@ -79,7 +84,7 @@ DashboardCard {
                         colBackground: Qt.rgba(1, 1, 1, 0.14)
                         colBackgroundHover: Qt.rgba(1, 1, 1, 0.26)
                         colRipple: Qt.rgba(1, 1, 1, 0.35)
-                        downAction: () => root.step(modelData)
+                        onClicked: root.step(modelData)
                         contentItem: Item {
                             MaterialSymbol {
                                 anchors.centerIn: parent
@@ -98,9 +103,15 @@ DashboardCard {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 14
-        text: Math.round(root.current)
+        text: SettingsHelp.displayValue(root.controlKey, root.current, false, 0, 0)
         font.pixelSize: 28
         font.weight: Font.Light
         color: Appearance.colors.colOnPrimaryContainer
+    }
+    SettingsControlHelp {
+        id: controlHelp
+        anchors.fill: parent
+        controlKey: root.controlKey
+        reason: root.unavailableReason
     }
 }

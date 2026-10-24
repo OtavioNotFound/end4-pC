@@ -23,7 +23,7 @@ Item {
         if (idx < 0) return;
         root.currentPage = idx;
         root.showingProfile = false;
-        if (!target.label) return;
+        if (!target.label && !target.section) return;
 
         const loader = pagesRepeater.itemAt(idx);
         if (!loader) return;
@@ -59,7 +59,6 @@ Item {
     property var pages: SettingsPages.pages
 
     Component.onCompleted: {
-        Config.readWriteDelay = 0
         Qt.callLater(() => {
             for (let i = 0; i < root.pages.length; i++) {
                 let loader = pagesRepeater.itemAt(i)
@@ -97,6 +96,15 @@ Item {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom; leftMargin: 20 }
                     spacing: 10
                     expanded: root.width > 900
+
+                    NavigationRailButton {
+                        visible: GlobalStates.settingsDetailedView && Config.options.settings.style === "dashboard"
+                        expanded: navRail.expanded
+                        buttonIcon: "arrow_back"
+                        buttonText: Translation.tr("Back to dashboard")
+                        Accessible.name: buttonText
+                        onClicked: GlobalStates.settingsDetailedView = false
+                    }
 
                     Item {
                         id: profileRowContainer

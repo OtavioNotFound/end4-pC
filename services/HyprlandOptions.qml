@@ -26,6 +26,11 @@ Singleton {
 
     property var values: ({})
 
+    Connections {
+        target: HyprlandConfig
+        function onReloaded() { root.refresh(); }
+    }
+
     function get(key, fallback) {
         const value = root.values[key]
         return value === undefined ? fallback : value

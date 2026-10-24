@@ -8,7 +8,10 @@ DashboardCard {
     id: root
 
     property string controlKey: ""
+    property string unavailableReason: SettingsHelp.disabledReason(controlKey, "", "")
     property string title: ""
+    Accessible.name: root.title
+    Accessible.description: controlHelp.text
     property string icon: "tune"
     property var tileShape: MaterialShape.Shape.Pentagon
 
@@ -48,7 +51,7 @@ DashboardCard {
 
             RippleButton {
                 visible: root.control?.reset !== undefined
-                enabled: root.control?.canReset?.() ?? true
+                enabled: root.unavailableReason === "" && (root.control?.canReset?.() ?? true)
                 implicitWidth: 36
                 implicitHeight: 36
                 buttonRadius: 18
@@ -56,7 +59,7 @@ DashboardCard {
                 colBackgroundHover: Qt.rgba(1, 1, 1, 0.22)
                 colRipple: Qt.rgba(1, 1, 1, 0.3)
                 opacity: enabled ? 1 : 0.4
-                downAction: () => Qt.callLater(() => root.control.reset())
+                onClicked: Qt.callLater(() => root.control.reset())
 
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
@@ -81,6 +84,8 @@ DashboardCard {
                     id: option
                     required property var modelData
 
+                    enabled: root.unavailableReason === ""
+                    Accessible.name: root.title + ": " + (modelData.displayName ?? modelData.value)
                     readonly property bool selected: root.currentValue === modelData.value
 
                     Layout.fillWidth: true
@@ -91,7 +96,7 @@ DashboardCard {
                     colBackground: selected ? Appearance.colors.colTertiary : Qt.rgba(1, 1, 1, 0.12)
                     colBackgroundHover: selected ? Appearance.colors.colTertiary : Qt.rgba(1, 1, 1, 0.22)
                     colRipple: Qt.rgba(1, 1, 1, 0.3)
-                    downAction: () => {
+                    onClicked: {
                         const value = modelData.value;
                         Qt.callLater(() => root.control.set(value));
                     }
@@ -122,5 +127,11 @@ DashboardCard {
                 }
             }
         }
+    }
+    SettingsControlHelp {
+        id: controlHelp
+        anchors.fill: parent
+        controlKey: root.controlKey
+        reason: root.unavailableReason
     }
 }

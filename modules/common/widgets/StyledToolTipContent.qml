@@ -11,7 +11,8 @@ Item {
     property real horizontalPadding: 10
     property real verticalPadding: 5
     property alias font: tooltipTextObject.font
-    implicitWidth: tooltipTextObject.implicitWidth + 2 * root.horizontalPadding
+    property real maximumWidth: Infinity
+    implicitWidth: Math.min(tooltipTextObject.implicitWidth + 2 * root.horizontalPadding, maximumWidth)
     implicitHeight: tooltipTextObject.implicitHeight + 2 * root.verticalPadding
 
     property bool isVisible: backgroundRectangle.implicitHeight > 0
@@ -25,7 +26,7 @@ Item {
         color: Appearance?.colors.colTooltip ?? "#3C4043"
         radius: Appearance?.rounding.verysmall ?? 7
         opacity: shown ? 1 : 0
-        implicitWidth: shown ? (tooltipTextObject.implicitWidth + 2 * root.horizontalPadding) : 0
+        implicitWidth: shown ? root.implicitWidth : 0
         implicitHeight: shown ? (tooltipTextObject.implicitHeight + 2 * root.verticalPadding) : 0
         clip: true
 
@@ -43,6 +44,7 @@ Item {
             id: tooltipTextObject
             anchors.centerIn: parent
             text: root.text
+            width: Math.max(1, root.implicitWidth - 2 * root.horizontalPadding)
             font.pixelSize: Appearance?.font.pixelSize.smaller ?? 14
             font.hintingPreference: Font.PreferNoHinting // Prevent shaky text
             color: Appearance?.colors.colOnTooltip ?? "#FFFFFF"

@@ -13,6 +13,7 @@ Singleton {
     property string firstRunNotifBody: "Hit Super+/ for a list of keybinds"
     property string defaultWallpaperPath: FileUtils.trimFileProtocol(`${Directories.assetsPath}/images/default_wallpaper.png`)
     property string welcomeQmlPath: FileUtils.trimFileProtocol(Quickshell.shellPath("welcome.qml"))
+    property bool welcomePending: false
 
     function load() {
         firstRunFileView.reload()
@@ -26,8 +27,16 @@ Singleton {
     }
 
     function handleFirstRun() {
-        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, root.defaultWallpaperPath])
+        if (!Config.ready) { root.welcomePending = true; return; }
+        root.welcomePending = false
+        if (!Config.options.background.wallpaperPath)
+            Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, root.defaultWallpaperPath])
         Quickshell.execDetached(["bash", "-c", `qs -p '${root.welcomeQmlPath}'`])
+    }
+
+    Connections {
+        target: Config
+        function onReadyChanged() { if (Config.ready && root.welcomePending) root.handleFirstRun(); }
     }
 
     FileView {

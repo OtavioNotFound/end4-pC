@@ -36,7 +36,7 @@ DashboardCard {
         colBackground: selected ? Appearance.colors.colSecondary : Qt.rgba(1, 1, 1, 0.12)
         colBackgroundHover: selected ? Appearance.colors.colSecondary : Qt.rgba(1, 1, 1, 0.22)
         colRipple: Qt.rgba(1, 1, 1, 0.3)
-        downAction: () => {
+        onClicked: {
             const value = option.value;
             const control = card.control;
             Qt.callLater(() => control.set(value));

@@ -5,6 +5,8 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import "../../../services/SettingsSearch.js" as Search
+import "../../../services/SettingsMetadata.js" as Metadata
 
 Item {
     id: root
@@ -12,6 +14,7 @@ Item {
     required property Item pager
     property int staggerMs: 45
     readonly property string query: pager.searchQuery ?? ""
+    property bool diagnosisOpen: false
 
     readonly property real rowHeight: 140
     readonly property real headerHeight: 36
@@ -26,23 +29,23 @@ Item {
         id: catalog
     }
 
-    readonly property string group: GlobalStates.dashboardGroup
+    readonly property string group: SettingsHelp.category(GlobalStates.dashboardGroup)
 
     readonly property var groupDefs: {
         const c = Appearance.colors;
         const mix = (a, b) => ColorUtils.mix(a, b, 0.5);
         return [
-            { name: Translation.tr("General"), icon: "browse", container: mix(c.colPrimaryContainer, c.colTertiaryContainer), onContainer: mix(c.colOnPrimaryContainer, c.colOnTertiaryContainer), accent: mix(c.colPrimary, c.colTertiary), onAccent: mix(c.colOnPrimary, c.colOnTertiary) },
-            { name: Translation.tr("Interface"), icon: "bottom_app_bar", container: c.colPrimaryContainer, onContainer: c.colOnPrimaryContainer, accent: c.colPrimary, onAccent: c.colOnPrimary },
-            { name: Translation.tr("Bar"), icon: "toast", rotation: 180, container: c.colSecondaryContainer, onContainer: c.colOnSecondaryContainer, accent: c.colSecondary, onAccent: c.colOnSecondary },
-            { name: Translation.tr("Desktop"), icon: "texture", container: c.colTertiaryContainer, onContainer: c.colOnTertiaryContainer, accent: c.colTertiary, onAccent: c.colOnTertiary },
-            { name: Translation.tr("Hyprland"), icon: "select_window_2", container: mix(c.colPrimaryContainer, c.colSecondaryContainer), onContainer: mix(c.colOnPrimaryContainer, c.colOnSecondaryContainer), accent: mix(c.colPrimary, c.colSecondary), onAccent: mix(c.colOnPrimary, c.colOnSecondary) },
-            { name: Translation.tr("Services"), icon: "settings", container: mix(c.colSecondaryContainer, c.colTertiaryContainer), onContainer: mix(c.colOnSecondaryContainer, c.colOnTertiaryContainer), accent: mix(c.colSecondary, c.colTertiary), onAccent: mix(c.colOnSecondary, c.colOnTertiary) }
+            { id: "general", name: SettingsHelp.categoryTitle("general"), icon: "browse", container: mix(c.colPrimaryContainer, c.colTertiaryContainer), onContainer: mix(c.colOnPrimaryContainer, c.colOnTertiaryContainer), accent: mix(c.colPrimary, c.colTertiary), onAccent: mix(c.colOnPrimary, c.colOnTertiary) },
+            { id: "interface", name: SettingsHelp.categoryTitle("interface"), icon: "bottom_app_bar", container: c.colPrimaryContainer, onContainer: c.colOnPrimaryContainer, accent: c.colPrimary, onAccent: c.colOnPrimary },
+            { id: "bar", name: SettingsHelp.categoryTitle("bar"), icon: "toast", rotation: 180, container: c.colSecondaryContainer, onContainer: c.colOnSecondaryContainer, accent: c.colSecondary, onAccent: c.colOnSecondary },
+            { id: "desktop", name: SettingsHelp.categoryTitle("desktop"), icon: "texture", container: c.colTertiaryContainer, onContainer: c.colOnTertiaryContainer, accent: c.colTertiary, onAccent: c.colOnTertiary },
+            { id: WM.compositor === "niri" ? "niri" : "hyprland", name: WM.compositor === "niri" ? Translation.tr("Niri") : Translation.tr("Hyprland"), icon: "select_window_2", container: mix(c.colPrimaryContainer, c.colSecondaryContainer), onContainer: mix(c.colOnPrimaryContainer, c.colOnSecondaryContainer), accent: mix(c.colPrimary, c.colSecondary), onAccent: mix(c.colOnPrimary, c.colOnSecondary) },
+            { id: "services", name: SettingsHelp.categoryTitle("services"), icon: "settings", container: mix(c.colSecondaryContainer, c.colTertiaryContainer), onContainer: mix(c.colOnSecondaryContainer, c.colOnTertiaryContainer), accent: mix(c.colSecondary, c.colTertiary), onAccent: mix(c.colOnSecondary, c.colOnTertiary) }
         ];
     }
 
     readonly property var groupColors: {
-        const found = groupDefs.find(g => g.name === group);
+        const found = groupDefs.find(g => g.id === group);
         return found ?? { container: Appearance.m3colors.m3surfaceContainerHighest, onContainer: Appearance.m3colors.m3onSurface, accent: Appearance.m3colors.m3onSurface, onAccent: Appearance.m3colors.m3surface };
     }
 
@@ -56,7 +59,7 @@ Item {
         name: Translation.tr("All"), icon: "apps",
         container: Appearance.m3colors.m3surfaceContainerHighest, onContainer: Appearance.m3colors.m3onSurface,
         accent: Appearance.m3colors.m3onSurface, onAccent: Appearance.m3colors.m3surface
-    })].concat(groupDefs.map(g => Object.assign({ id: g.name, count: allEntries.filter(e => e.kind === "card" && e.group === g.name && isVisibleEntry(e)).length }, g)))
+    })].concat(groupDefs.map(g => Object.assign({ count: allEntries.filter(e => e.kind === "card" && e.group === g.id && isVisibleEntry(e)).length }, g)))
 
     readonly property var railDimmed: {
         const dim = {};
@@ -68,7 +71,7 @@ Item {
         if (group === "" || tokens.length > 0) return [];
         const list = [];
         catalog.sections.forEach((section, si) => {
-            if ((section.page ?? "") === group && isVisibleEntry({ requires: section.requires ?? "", when: section.when ?? "" }))
+            if (SettingsHelp.category(section.page ?? "") === group && isVisibleEntry({ requires: section.requires ?? "", when: section.when ?? "" }))
                 list.push({ index: si, title: section.title });
         });
         return list;
@@ -79,7 +82,7 @@ Item {
     }
 
     function baseSpan(type) {
-        if (type === "style") return [2, 2];
+        if (type === "style") return [root.width < 1000 ? 4 : 2, 2];
         if (type === "schemes" || type === "barpos") return [2, 2];
         if (type === "weathermap") return [4, 2];
         if (type === "webapps") return [4, 3];
@@ -96,6 +99,10 @@ Item {
     }
 
     readonly property var heroEntries: [
+        { id: "hero:quick", type: "action", title: Translation.tr("Light, dark and colors"), description: Translation.tr("Open the existing appearance controls."), icon: "contrast", section: Translation.tr("Interface"), actionId: "quick", kw: "dark light mode theme claro escuro aparência tema" },
+        { id: "hero:displays", type: "action", title: Translation.tr("Displays"), description: Translation.tr("Resolution, scale and monitor arrangement."), icon: "monitor", section: WM.compositor === "niri" ? Translation.tr("Niri") : Translation.tr("Hyprland"), actionId: "displays", kw: "monitor display resolution scale tela resolução escala" },
+        { id: "hero:all", type: "action", title: Translation.tr("All settings"), description: Translation.tr("Includes fonts, services and advanced options."), icon: "settings", section: Translation.tr("General"), actionId: "all", kw: "advanced fonts ai autostart avançado fontes serviços" },
+        { id: "hero:diagnostics", type: "action", title: Translation.tr("Check configuration"), description: Translation.tr("Find missing images and dependencies."), icon: "fact_check", section: Translation.tr("General"), actionId: "diagnostics", kw: "doctor health diagnostic errors dependências diagnóstico erros" },
         { id: "hero:style", type: "style", title: Translation.tr("Settings panel style"), section: Translation.tr("Interface"), kw: "settings panel style default minimal dashboard window overlay" },
         { id: "hero:blur", type: "toggle", key: "desktop:Blur wall", title: Translation.tr("Blur wallpaper"), icon: "blur_on", section: Translation.tr("Desktop"), kw: "blur wallpaper background" },
         { id: "hero:transparency", type: "toggle", key: "interface:Transparency/Enable", title: Translation.tr("Transparency"), icon: "opacity", section: Translation.tr("Interface"), kw: "transparency opacity transparência opacidade automático manual wallpaper" },
@@ -128,6 +135,8 @@ Item {
             page: name, group: name, section: name, count: heroGroups[name]
         }));
         return list.map(e => Object.assign(e, {
+            group: SettingsHelp.category(e.group),
+            title: e.kind === "card" ? SettingsHelp.title(e.key, e.title) : e.title,
             shape: shapePool[Math.floor(Math.random() * shapePool.length)],
             travelX: (Math.random() - 0.5) * 500,
             travelY: (Math.random() - 0.5) * 400
@@ -135,43 +144,31 @@ Item {
     }
 
     readonly property var usedWidgets: {
-        const layouts = Config.options.bar.layouts;
-        return Array.from(layouts.leftLayout).concat(Array.from(layouts.middleLayout), Array.from(layouts.rightLayout));
+        return SettingsHelp.usedWidgets;
     }
 
-    function isVisibleEntry(e) {
-        if (e.when === "material" && ColorSchemes.current !== "") return false;
-        if (e.when === "hyprland" && WM.compositor !== "hyprland") return false;
-        if (e.when === "layoutdwindle" && (WM.compositor !== "hyprland" || Config.options.hyprland.general.layout !== "dwindle")) return false;
-        if (e.when === "layoutmaster" && (WM.compositor !== "hyprland" || Config.options.hyprland.general.layout !== "master")) return false;
-        if (e.when === "hyprbordercolor" && (WM.compositor !== "hyprland" || !Config.options.hyprland.general.borderColor.enable)) return false;
-        if (e.when === "football" && !Config.options.sidebar.football.enable) return false;
-        if (e.when === "dockmagnify" && !Config.options.dock.magnify) return false;
-        if (e.when === "dockhug" && Config.options.dock.style !== "hug") return false;
-        if (e.when === "dockfloat" && Config.options.dock.style !== "float") return false;
-        if (e.when === "clockdigital" && Config.options.background.widgets.clock.style !== "digital") return false;
-        if (e.when === "clockcookie" && Config.options.background.widgets.clock.style !== "cookie") return false;
-        if (e.when === "clockdaily" && Config.options.background.widgets.clock.style !== "daily") return false;
-        if (e.when === "clockpixel" && Config.options.background.widgets.clock.style !== "pixel") return false;
-        return !e.requires || usedWidgets.includes(e.requires);
+    function isVisibleEntry(entry) {
+        return SettingsHelp.compatible(entry) && SettingsHelp.conditionReason(entry.when, entry.requires) === "";
     }
 
-    function normalized(text) {
-        return Wallpapers.normalizeText(text).replace(/[_\-.:/]+/g, " ");
-    }
+    function normalized(text) { return Search.normalize(text); }
 
     function matches(tokens) {
-        const scored = [];
-        allEntries.forEach(e => {
-            if (e.kind !== "card" || (e.hero && e.type === "toggle" && !e.searchable) || !isVisibleEntry(e)) return;
-            const key = normalized([e.title, e.section, e.kw, e.key ?? ""].join(" "));
-            const score = Wallpapers.scoreItem(key, tokens);
+        const scored = [], seen = new Set();
+        allEntries.forEach(entry => {
+            if (entry.kind !== "card" || !SettingsHelp.compatible(entry)) return;
+            if (entry.hero && allEntries.some(other => other.kind === "card" && !other.hero && other.key === entry.key && entry.key)) return;
+            const identity = entry.key || entry.id;
+            if (seen.has(identity)) return;
+            const meta = Metadata.forKey(entry.key);
+            const text = [entry.title, entry.section, entry.kw, entry.key ?? "", meta.description ?? "", Translation.tr(meta.description ?? ""), meta.keywords ?? ""].join(" ");
+            const score = Search.score(text, tokens, Wallpapers.scoreItem);
             if (score < 0) return;
-            const sectionScore = Wallpapers.scoreItem(normalized(e.section ?? ""), tokens);
-            scored.push({ entry: e, score: sectionScore >= 0 ? score + 1000 : score });
+            seen.add(identity);
+            scored.push({ entry: entry, score: score });
         });
         scored.sort((a, b) => b.score - a.score);
-        return scored.map(s => s.entry);
+        return scored.map(item => item.entry);
     }
 
     function isEnableCard(card) {
@@ -418,7 +415,7 @@ Item {
     property string pendingSection: ""
 
     function openSection(groupName, sectionTitle) {
-        GlobalStates.dashboardGroup = groupName;
+        GlobalStates.dashboardGroup = SettingsHelp.category(groupName);
         root.pendingSection = sectionTitle;
         pendingScrollTimer.restart();
     }
@@ -427,7 +424,7 @@ Item {
         id: pendingScrollTimer
         interval: 280
         onTriggered: {
-            const index = catalog.sections.findIndex(section => (section.page ?? "") === root.group && section.title === root.pendingSection);
+            const index = catalog.sections.findIndex(section => SettingsHelp.category(section.page ?? "") === root.group && section.title === root.pendingSection);
             if (index >= 0) root.scrollToSection(index);
             root.pendingSection = "";
         }
@@ -442,9 +439,19 @@ Item {
         flick.contentY = Math.max(0, Math.min(Math.max(0, flick.contentHeight - flick.height), flick.contentY + delta));
     }
 
+    function activateAction(action) {
+        if (action === "diagnostics") {
+            root.diagnosisOpen = true;
+            SettingsDiagnostics.run();
+        } else if (action === "displays") {
+            GlobalStates.openSettingsAt(WM.compositor === "niri" ? "niri" : "hyprland", "", Translation.tr("Displays"));
+        } else GlobalStates.openSettingsAt(action === "quick" ? "quick" : "general");
+    }
+
 
         DashboardGroupRail {
             id: rail
+            visible: !root.diagnosisOpen
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -457,6 +464,7 @@ Item {
 
         Flickable {
             id: chipsRow
+            visible: !root.diagnosisOpen
             anchors.left: rail.right
             anchors.leftMargin: 16
             anchors.right: parent.right
@@ -536,6 +544,7 @@ Item {
 
         Flickable {
             id: flick
+            visible: !root.diagnosisOpen
             anchors.left: rail.right
             anchors.leftMargin: 16
             anchors.right: parent.right
@@ -586,6 +595,27 @@ Item {
                         }
                         Component.onCompleted: Qt.callLater(() => { ready = true; })
 
+                        Binding {
+                            target: slot.item
+                            property: "unavailableReason"
+                            value: SettingsHelp.disabledReason(slot.modelData.key ?? "", slot.modelData.when ?? "", slot.modelData.requires ?? "")
+                            when: slot.item !== null && "unavailableReason" in slot.item
+                        }
+
+                        Binding {
+                            target: slot.item
+                            property: "enabled"
+                            value: SettingsHelp.disabledReason(slot.modelData.key ?? "", slot.modelData.when ?? "", slot.modelData.requires ?? "") === ""
+                            when: slot.item !== null && slot.modelData.kind === "card" && !("unavailableReason" in slot.item)
+                        }
+
+                        SettingsControlHelp {
+                            anchors.fill: parent
+                            controlKey: slot.modelData.key ?? ""
+                            reason: SettingsHelp.disabledReason(controlKey, slot.modelData.when ?? "", slot.modelData.requires ?? "")
+                            visible: slot.place !== null && slot.modelData.kind === "card" && slot.item !== null && !("unavailableReason" in slot.item)
+                        }
+
                         x: shown ? shown.col * (colW + root.gap) : 0
                         y: shown ? shown.y : 0
                         width: shown ? shown.w * colW + (shown.w - 1) * root.gap : 0
@@ -603,6 +633,7 @@ Item {
 
                         active: place !== null && (modelData.kind === "header" || inView)
                         sourceComponent: modelData.kind === "header" ? headerComponent
+                            : modelData.type === "action" ? actionComponent
                             : modelData.type === "style" ? styleComponent
                             : modelData.type === "schemes" ? schemesComponent
                             : modelData.type === "barpos" ? barposComponent
@@ -624,6 +655,22 @@ Item {
                             : modelData.type === "batterystyle" ? batteryStyleComponent
                             : modelData.type === "widgets" ? widgetsComponent
                             : selectComponent
+
+                        Component {
+                            id: actionComponent
+                            DashboardActionCard {
+                                anchors.fill: parent
+                                title: slot.modelData.title
+                                description: slot.modelData.description
+                                icon: slot.modelData.icon
+                                pager: root.pager
+                                staggerMs: root.staggerMs
+                                animIndex: slot.index % 6
+                                travelX: slot.modelData.travelX
+                                travelY: slot.modelData.travelY
+                                onActivated: root.activateAction(slot.modelData.actionId)
+                            }
+                        }
 
                         Component {
                             id: headerComponent
@@ -753,7 +800,7 @@ Item {
                                 title: slot.modelData.title
                                 icon: slot.modelData.icon
                                 tileShape: slot.modelData.shape
-                                showPercent: slot.modelData.percent !== false
+                                showPercent: slot.modelData.percent ?? (catalog.controlFor(slot.modelData.key)?.usePercentTooltip ?? SettingsQuickControls.controls[slot.modelData.key]?.usePercentTooltip ?? true)
                                 pager: root.pager
                                 staggerMs: root.staggerMs
                                 animIndex: slot.index % 6
@@ -1015,4 +1062,20 @@ Item {
                 }
             }
         }
+    Loader {
+        anchors.fill: parent
+        active: root.diagnosisOpen
+        sourceComponent: DashboardDiagnosticsPage {
+            onBack: root.diagnosisOpen = false
+            onChooseWallpaper: { root.diagnosisOpen = false; root.pager.goToPage(root.pager.wallpapersPage); }
+        }
+    }
+
+    PagePlaceholder {
+        anchors.leftMargin: 90
+        visible: !root.diagnosisOpen && root.tokens.length > 0 && root.layoutResult.count === 0
+        icon: "search_off"
+        title: Translation.tr("No settings found")
+        description: Translation.tr("Try a shorter name, a synonym, or open All settings.")
+    }
 }

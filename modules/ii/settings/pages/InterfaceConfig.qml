@@ -122,7 +122,18 @@ ContentPage {
             icon: "motion_mode"
             shape: MaterialShape.Shape.Cookie6Sided
             title: Translation.tr("Transparency")
+            NoticeBox {
+                Layout.fillWidth: true
+                text: Translation.tr("Transparency controls panel opacity; Glassy UI samples the wallpaper. Automatic mode keeps manual values saved, and Glassy UI may impose a minimum content transparency.")
+            }
             GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "water_drop"
+                    text: Translation.tr("Glassy UI")
+                    description: SettingsHelp.text("interface:Glassy UI")
+                    checked: Config.options.background.widgets.glass.enable
+                    onCheckedChanged: Config.options.background.widgets.glass.enable = checked
+                }
                 ConfigSwitch {
                     buttonIcon: "check"
                     text: Translation.tr("Enable")
@@ -139,6 +150,7 @@ ContentPage {
                 ConfigSlider {
                     buttonIcon: "layers"
                     text: Translation.tr("Background")
+                    tooltipContent: SettingsHelp.displayValue("interface:Transparency/Background", value, true, from, to)
                     enabled: Config.options.appearance.transparency.enable
                             && !Config.options.appearance.transparency.automatic
                     from: 0; to: 0.6
@@ -151,6 +163,7 @@ ContentPage {
                 ConfigSlider {
                     buttonIcon: "opacity"
                     text: Translation.tr("Content")
+                    tooltipContent: SettingsHelp.displayValue("interface:Transparency/Content", value, true, from, to)
                     enabled: Config.options.appearance.transparency.enable
                             && !Config.options.appearance.transparency.automatic
                     from: 0; to: 1

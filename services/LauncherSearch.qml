@@ -397,13 +397,15 @@ Singleton {
             });
         });
         ////////////////// Settings search //////////////////
-        const settingsEntries = Config.options.settings.style === "dashboard" ? [] : SettingsSearchIndex.search(root.query, 8);
+        const settingsEntries = SettingsSearchIndex.search(root.query, 8);
         const settingsResults = settingsEntries.map(entry => {
             const breadcrumb = entry.kind === "page" ? Translation.tr("Settings") : [entry.pageName, entry.kind === "option" ? entry.section : "", entry.kind === "option" ? entry.subsection : ""].filter(part => part).join(" › ");
+            const control = entry.kind === "option" ? SettingsQuickControls.find(entry.pageId, entry.rawSection, entry.rawSubsection, entry.rawLabel) : null;
+            const unavailable = control ? SettingsHelp.disabledReason(control.key, "", "") : "";
             return resultComp.createObject(null, {
-                control: entry.kind === "option" ? SettingsQuickControls.find(entry.pageId, entry.rawSection, entry.rawSubsection, entry.rawLabel) : null,
+                control: unavailable ? null : control,
                 name: entry.label,
-                comment: breadcrumb,
+                comment: [breadcrumb, unavailable].filter(value => value).join(" · "),
                 verb: Translation.tr("Go"),
                 type: [Translation.tr("Settings"), entry.pageName, entry.kind === "option" ? entry.section : "", entry.kind === "option" ? entry.subsection : ""].filter(part => part).join(" • "),
                 iconName: entry.icon,

@@ -7,6 +7,9 @@ import QtQuick.Controls
 RippleButton {
     id: root
     property string buttonIcon
+    property string description: ""
+    Accessible.name: root.text
+    Accessible.description: root.description
     property alias iconSize: iconWidget.iconSize
     colBackgroundHover: "transparent"
 
@@ -16,6 +19,12 @@ RippleButton {
     font.pixelSize: Appearance.font.pixelSize.small
     
     onClicked: checked = !checked
+
+    StyledToolTip {
+        text: root.description
+        maximumContentWidth: 420
+        extraVisibleCondition: root.description !== "" && (root.hovered || root.activeFocus)
+    }
 
     contentItem: RowLayout {
         spacing: 10

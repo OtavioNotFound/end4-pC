@@ -5,6 +5,8 @@ import Quickshell
 import Quickshell.Io
 import qs.services
 import qs.modules.common.functions
+import "SettingsSearch.js" as Search
+import "SettingsMetadata.js" as Metadata
 
 Singleton {
     id: root
@@ -18,33 +20,7 @@ Singleton {
     ]
 
     function parsePage(source) {
-        const typeOpen = /^\s*([A-Z][\w.]*)\s*\{/;
-        const labelProp = /^\s*(title|text):\s*Translation\.tr\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*\)/;
-        const entries = [];
-        const stack = [];
-        let section = "";
-        let subsection = "";
-        for (const line of source.split("\n")) {
-            const prop = line.match(labelProp);
-            const type = stack.length > 0 ? stack[stack.length - 1] : null;
-            if (prop && type) {
-                const label = (prop[2] ?? prop[3]).replace(/\\(["'])/g, "$1");
-                if (type === "ContentSection" && prop[1] === "title") {
-                    section = label;
-                    subsection = "";
-                    entries.push({ kind: "section", section: label, subsection: "", label: label });
-                } else if (root.labelledTypes.includes(type)) {
-                    entries.push({ kind: "option", section: section, subsection: type === "ContentSubsection" ? "" : subsection, label: label });
-                    if (type === "ContentSubsection") subsection = label;
-                }
-            }
-            const opens = (line.match(/\{/g) || []).length;
-            const closes = (line.match(/\}/g) || []).length;
-            for (let i = 0; i < closes; i++) stack.pop();
-            const typeMatch = line.match(typeOpen);
-            for (let i = 0; i < opens; i++) stack.push(i === 0 && typeMatch ? typeMatch[1] : null);
-        }
-        return entries;
+        return Search.parsePage(source, root.labelledTypes)
     }
 
     function indexPage(pageId, source) {
@@ -54,14 +30,14 @@ Singleton {
     }
 
     function search(query, limit) {
-        const tokens = query.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+        const tokens = Search.tokens(query);
         if (tokens.length === 0) return [];
 
         const results = [];
         for (const page of SettingsPages.pages) {
             const pageName = page.name.toLowerCase();
-            const pageScore = root.scoreText(pageName, tokens);
-            if (pageScore > 0) {
+            const pageScore = Search.score(pageName + " " + page.id + " " + (Metadata.pageKeywords[page.id] ?? ""), tokens, Wallpapers.scoreItem);
+            if (pageScore >= 0) {
                 results.push({
                     pageId: page.id, pageName: page.name, icon: page.icon,
                     kind: "page", section: "", label: page.name, score: pageScore + 50
@@ -70,8 +46,11 @@ Singleton {
             for (const entry of (root.entriesByPage[page.id] ?? [])) {
                 const label = Translation.tr(entry.label);
                 const section = Translation.tr(entry.section);
-                const haystack = (label + " " + entry.label + " " + section + " " + pageName).toLowerCase();
-                if (!tokens.every(t => haystack.includes(t))) continue;
+                const controlKey = SettingsQuickControls.keyFor(page.id, entry.section, entry.subsection, entry.label);
+                const meta = Metadata.forKey(controlKey);
+                const description = [entry.description ?? "", Translation.tr(meta.description ?? ""), meta.description ?? "", meta.keywords ?? ""].join(" ");
+                const haystack = [label, entry.label, section, pageName, entry.subsection ?? "", description].join(" ");
+                if (Search.score(haystack, tokens, Wallpapers.scoreItem) < 0) continue;
                 const labelScore = Math.max(
                     root.scoreText(label.toLowerCase(), tokens),
                     root.scoreText(entry.label.toLowerCase(), tokens)
@@ -88,16 +67,7 @@ Singleton {
     }
 
     function scoreText(text, tokens) {
-        let score = 0;
-        for (const token of tokens) {
-            const at = text.indexOf(token);
-            if (at < 0) continue;
-            if (text === token) score += 100;
-            else if (at === 0) score += 60;
-            else if (text[at - 1] === " ") score += 40;
-            else score += 20;
-        }
-        return score;
+        return Search.score(text, tokens, Wallpapers.scoreItem);
     }
 
     Instantiator {

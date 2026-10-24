@@ -414,6 +414,7 @@ ContentPage {
                 ConfigSwitch {
                     buttonIcon: "hearing"
                     text: Translation.tr("Earbang protection")
+                    description: SettingsHelp.text("general:Earbang protection")
                     checked: Config.options.audio.protection.enable
                     onCheckedChanged: {
                         Config.options.audio.protection.enable = checked;

@@ -8,7 +8,7 @@ import qs.modules.common.widgets
 Scope {
     id: root
 
-    readonly property bool active: GlobalStates.settingsOpen && Config.options.settings.style === "dashboard"
+    readonly property bool active: GlobalStates.settingsOpen && Config.options.settings.style === "dashboard" && !GlobalStates.settingsDetailedView
 
     Loader {
         active: root.active

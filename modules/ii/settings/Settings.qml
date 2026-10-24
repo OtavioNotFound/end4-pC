@@ -28,9 +28,14 @@ Scope {
 
     PanelWindow {
         id: panelWindow
-        visible: GlobalStates.settingsOpen && Config.options.settings.style !== "dashboard"
+        visible: GlobalStates.settingsOpen && (Config.options.settings.style !== "dashboard" || GlobalStates.settingsDetailedView)
 
         function hide() {
+            if (GlobalStates.settingsDetailedView && Config.options.settings.style === "dashboard") {
+                GlobalStates.settingsDetailedView = false;
+                return;
+            }
+            GlobalStates.settingsDetailedView = false;
             GlobalStates.settingsOpen = false;
         }
 
@@ -108,6 +113,7 @@ Scope {
             }
 
             Keys.onTabPressed: (event) => {
+            if (!(event.modifiers & Qt.ControlModifier)) { event.accepted = false; return; }
             const count = settingsContent.pages.length;
             settingsContent.currentPage = (settingsContent.currentPage + 1) % count;
             settingsContent.showingProfile = false;
@@ -115,6 +121,7 @@ Scope {
         }
 
         Keys.onBacktabPressed: (event) => {
+            if (!(event.modifiers & Qt.ControlModifier)) { event.accepted = false; return; }
             const count = settingsContent.pages.length;
             settingsContent.currentPage = (settingsContent.currentPage - 1 + count) % count;
             settingsContent.showingProfile = false;

@@ -17,6 +17,16 @@ QML_FILES = [
     'services/PresetsOnline.qml', 'services/MaterialThemeLoader.qml', 'services/Cliphist.qml',
     'services/Wallpapers.qml', 'services/Weather.qml',
 ]
+QML_FILES += [
+    'GlobalStates.qml', 'services/SettingsHelp.qml', 'services/SettingsDiagnostics.qml',
+    'services/SettingsQuickControls.qml', 'services/SettingsSearchIndex.qml',
+    'services/LauncherSearch.qml', 'services/HyprlandOptions.qml', 'services/FirstRunExperience.qml',
+    'modules/common/widgets/ConfigSwitch.qml', 'modules/common/widgets/ConfigSlider.qml',
+    'modules/common/widgets/PresetPopup.qml', 'modules/common/widgets/StyledToolTip.qml',
+    'modules/common/widgets/StyledToolTipContent.qml', 'modules/ii/overview/SearchItem.qml',
+]
+QML_FILES += [str(path.relative_to(ROOT)) for path in sorted((ROOT / 'modules/ii/settings').rglob('*.qml'))]
+QML_FILES = list(dict.fromkeys(QML_FILES))
 
 
 def run(command):
@@ -32,7 +42,7 @@ def main():
     if missing:
         print('Missing test dependencies / dependências ausentes: ' + ', '.join(missing), file=sys.stderr)
         return 2
-    for directory in ('tests/icon_theme_manager', 'tests/presets'):
+    for directory in ('tests/icon_theme_manager', 'tests/presets', 'tests/settings'):
         result = run([sys.executable, '-m', 'unittest', 'discover', '-s', directory, '-q'])
         print(f'{directory}: {result.stderr.strip()}')
     count = 0
@@ -55,7 +65,7 @@ def main():
             # Parse without writing. Upstream MaxColumnWidth triggers a local
             # Qt formatter crash on some files, unrelated to their QML syntax.
             run([qmlformat, '--ignore-settings', path])
-        print(f'QML: {len(QML_FILES)} changed files parsed; no files reformatted')
+        print(f'QML: {len(QML_FILES)} settings and related files parsed; no files reformatted')
     else:
         print('QML parser skipped: qmlformat unavailable')
     run(['git', 'diff', '--check'])

@@ -125,11 +125,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, default=Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'illogical-impulse/config.json')
     parser.add_argument('--log', type=Path)
-    parser.add_argument('--report', action='store_true', help='sanitized JSON for issues')
+    output = parser.add_mutually_exclusive_group()
+    output.add_argument('--report', action='store_true', help='sanitized JSON for issues')
+    output.add_argument('--local-json', action='store_true', help='private UI output including asset paths; never share as an issue report')
     parser.add_argument('--lang', choices=['pt', 'en'], default='pt')
     args = parser.parse_args()
     result, issues = report(args.config, args.log)
-    if args.report:
+    if args.local_json:
+        result['privacy'] = 'private local UI; contains asset paths; do not share'
+        result['assets'] = issues
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    elif args.report:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
         print('Verificador end4-pC (somente leitura)' if args.lang == 'pt' else 'end4-pC integrity checker (read only)')

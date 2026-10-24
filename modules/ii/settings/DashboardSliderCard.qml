@@ -8,7 +8,10 @@ DashboardCard {
     id: root
 
     property string controlKey: ""
+    property string unavailableReason: SettingsHelp.disabledReason(controlKey, "", "")
     property string title: ""
+    Accessible.name: root.title
+    Accessible.description: controlHelp.text
     property string icon: "tune"
     property var tileShape: MaterialShape.Shape.Flower
     property bool showPercent: true
@@ -50,9 +53,7 @@ DashboardCard {
             }
 
             StyledText {
-                text: root.showPercent
-                    ? Math.round((root.current - root.fromValue) / (root.toValue - root.fromValue) * 100) + "%"
-                    : Math.round(root.current)
+                text: SettingsHelp.displayValue(root.controlKey, root.current, root.showPercent, root.fromValue, root.toValue)
                 font.pixelSize: 28
                 font.weight: Font.Light
                 color: Appearance.colors.colOnSecondaryContainer
@@ -62,19 +63,29 @@ DashboardCard {
         Item { Layout.fillHeight: true }
 
         StyledSlider {
+            enabled: root.unavailableReason === ""
+            Accessible.name: root.title
+            Accessible.description: controlHelp.text
             Layout.fillWidth: true
             configuration: StyledSlider.Configuration.Wavy
             from: root.fromValue
             to: root.toValue
             value: root.current
             usePercentTooltip: root.showPercent
-            stopIndicatorValues: []
+            tooltipContent: SettingsHelp.displayValue(root.controlKey, value, root.showPercent, root.fromValue, root.toValue)
+            stopIndicatorValues: root.control?.stopIndicatorValues ?? []
             highlightColor: Appearance.colors.colSecondary
             trackColor: Qt.rgba(1, 1, 1, 0.15)
             handleColor: Appearance.colors.colSecondary
             onMoved: {
-                if (root.control) root.control.set(value);
+                if (root.control && !root.unavailableReason) root.control.set(value);
             }
         }
+    }
+    SettingsControlHelp {
+        id: controlHelp
+        anchors.fill: parent
+        controlKey: root.controlKey
+        reason: root.unavailableReason
     }
 }

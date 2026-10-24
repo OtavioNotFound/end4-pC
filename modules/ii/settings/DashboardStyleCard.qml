@@ -86,7 +86,7 @@ DashboardCard {
                             colBackground: picked ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
                             colBackgroundHover: picked ? Appearance.colors.colPrimaryHover : Appearance.colors.colSecondaryContainerHover
                             colRipple: picked ? Appearance.colors.colPrimaryActive : Appearance.colors.colSecondaryContainerActive
-                            downAction: () => {
+                            onClicked: {
                                 const value = modelData.value;
                                 Qt.callLater(() => { Config.options.settings.animationSpeed = value; });
                             }
@@ -124,7 +124,7 @@ DashboardCard {
                     colBackground: selected ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
                     colBackgroundHover: selected ? Appearance.colors.colPrimaryHover : Appearance.colors.colSecondaryContainerHover
                     colRipple: selected ? Appearance.colors.colPrimaryActive : Appearance.colors.colSecondaryContainerActive
-                    downAction: () => {
+                    onClicked: {
                         const value = modelData.value;
                         Qt.callLater(() => { Config.options.settings.style = value; });
                     }

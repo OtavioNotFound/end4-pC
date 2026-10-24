@@ -175,6 +175,7 @@ Singleton {
         "desktop:Show alignment grid while dragging": root.optionSwitch("background.showGrid"),
         "desktop:Show snap lines when dropping": root.optionSwitch("background.showSnapLines"),
 
+        "interface:Glassy UI": root.optionSwitch("background.widgets.glass.enable"),
         "interface:Transparency/Enable": root.optionSwitch("appearance.transparency.enable"),
         "interface:Automatic (from wallpaper)": root.optionSwitch("appearance.transparency.automatic"),
         "interface:Transparency/Background": root.optionSlider("appearance.transparency.backgroundTransparency", 0, 0.6, [0.11]),
@@ -516,10 +517,15 @@ Singleton {
         )
     })
 
+    function keyFor(pageId, rawSection, rawSubsection, rawLabel) {
+        const candidates = [pageId + ":" + rawSection + "/" + rawSubsection + "/" + rawLabel,
+            pageId + ":" + rawSection + "/" + rawLabel, pageId + ":" + rawLabel];
+        return candidates.find(key => root.controls[key] !== undefined) ?? "";
+    }
+
     function find(pageId, rawSection, rawSubsection, rawLabel) {
-        return root.controls[pageId + ":" + rawSection + "/" + rawSubsection + "/" + rawLabel]
-            ?? root.controls[pageId + ":" + rawSection + "/" + rawLabel]
-            ?? root.controls[pageId + ":" + rawLabel]
-            ?? null;
+        const key = root.keyFor(pageId, rawSection, rawSubsection, rawLabel);
+        const control = root.controls[key];
+        return control ? Object.assign({ key: key }, control) : null;
     }
 }

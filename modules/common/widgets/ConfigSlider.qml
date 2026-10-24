@@ -15,6 +15,7 @@ RowLayout {
     property alias value: slider.value
     property alias stopIndicatorValues: slider.stopIndicatorValues
     property alias stepSize: slider.stepSize
+    property alias tooltipContent: slider.tooltipContent
     readonly property alias pressed: slider.pressed
     signal moved()
     property bool usePercentTooltip: true

@@ -9,6 +9,7 @@ DashboardCard {
     id: root
 
     property string controlKey: ""
+    property string unavailableReason: SettingsHelp.disabledReason(controlKey, "", "")
     property string title: ""
     property string icon: "toggle_on"
     property var tileShape: MaterialShape.Shape.Cookie6Sided
@@ -16,25 +17,16 @@ DashboardCard {
     property var override: null
     property string actionIcon: ""
     property string actionTip: ""
-    readonly property string helpText: {
-        if (controlKey === "interface:Glassy UI") {
-            const path = Config.options.background.wallpaperPath
-            if (!WallpaperResources.desktopSource || WallpaperResources.resources[path]?.issue)
-                return Translation.tr("Wallpaper unavailable. Check its path before using Glassy UI. Changes apply immediately.")
-            return Translation.tr("Glassy UI samples the wallpaper. It requires a valid image; compositor blur is a separate setting. Changes apply immediately.")
-        }
-        if (controlKey === "interface:Automatic (from wallpaper)")
-            return Translation.tr("Adjusts transparency from the wallpaper. Manual values remain saved. Changes apply immediately.")
-        return ""
-    }
+    readonly property string helpText: SettingsHelp.text(controlKey)
     Accessible.name: root.title
+    Accessible.description: controlHelp.text
     Accessible.role: Accessible.CheckBox
     Accessible.checkable: true
     Accessible.checked: root.checked
     activeFocusOnTab: true
     border.width: root.activeFocus ? 1 : 0
     border.color: Appearance.colors.colPrimary
-    Keys.onSpacePressed: if (root.control) root.control.set(!root.checked)
+    Keys.onSpacePressed: if (root.control && !root.unavailableReason) root.control.set(!root.checked)
 
     signal actionTriggered()
     readonly property var control: override ?? SettingsQuickControls.controls[controlKey] ?? null
@@ -128,7 +120,7 @@ DashboardCard {
             elide: Text.ElideRight
         }
         StyledText {
-            text: root.checked ? Translation.tr("On") : Translation.tr("Off")
+            text: root.unavailableReason ? Translation.tr("Unavailable") : root.checked ? Translation.tr("On") : Translation.tr("Off")
             font.pixelSize: Appearance.font.pixelSize.smaller
             color: root.checked ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
             opacity: 0.8
@@ -141,16 +133,12 @@ DashboardCard {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            if (!root.control) return;
+            if (!root.control || root.unavailableReason) return;
             const next = !root.checked;
             Qt.callLater(() => root.control.set(next));
         }
     }
 
-    StyledToolTip {
-        text: root.helpText
-        extraVisibleCondition: root.helpText !== "" && toggleMouse.containsMouse
-    }
 
     RippleButton {
         id: actionButton
@@ -164,7 +152,7 @@ DashboardCard {
         colBackground: Qt.rgba(1, 1, 1, 0.12)
         colBackgroundHover: Qt.rgba(1, 1, 1, 0.22)
         colRipple: Qt.rgba(1, 1, 1, 0.3)
-        downAction: () => root.actionTriggered()
+        onClicked: root.actionTriggered()
 
         contentItem: MaterialSymbol {
             horizontalAlignment: Text.AlignHCenter
@@ -178,5 +166,11 @@ DashboardCard {
         StyledToolTip {
             text: root.actionTip
         }
+    }
+    SettingsControlHelp {
+        id: controlHelp
+        anchors.fill: parent
+        controlKey: root.controlKey
+        reason: root.unavailableReason
     }
 }

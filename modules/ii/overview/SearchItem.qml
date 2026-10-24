@@ -329,6 +329,7 @@ RippleButton {
                 to: root.control.to
                 stopIndicatorValues: root.control.stopIndicatorValues
                 usePercentTooltip: root.control.usePercentTooltip
+                tooltipContent: SettingsHelp.displayValue(root.control.key ?? "", value, root.control.usePercentTooltip, root.control.from, root.control.to)
                 onMoved: root.control.set(value)
 
                 Binding {
