@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -76,6 +75,15 @@ class PresetTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'lockWall'):
             self.apply()
         self.assertEqual(resources.read_object(self.config), self.original)
+        # A missing asset inherited from the active config must point the user
+        # to that file, rather than telling them to repair an unrelated preset.
+        self.original['background']['lockWall'] = str(self.home / 'inherited-lockscreen.png')
+        self.config.write_text(json.dumps(self.original))
+        self.write_preset(self.image('wall.jpg'))
+        with self.assertRaises(ValueError) as caught:
+            self.apply()
+        self.assertIn(str(self.config), str(caught.exception))
+        self.assertEqual(resources.read_object(self.config), self.original)
 
     def test_corrupt_image_refused(self):
         bad = self.home / 'wallpaper.png'
@@ -115,6 +123,14 @@ class PresetTests(unittest.TestCase):
         self.switch.write_text(f'#!{sys.executable}\nfrom pathlib import Path\nPath({str(self.config)!r}).write_text(\'{{"background":{{"wallpaperPath":"wrong"}}}}\')\n')
         before = self.config.read_bytes()
         with self.assertRaisesRegex(RuntimeError, 'verification'):
+            self.apply()
+        self.assertEqual(self.config.read_bytes(), before)
+
+    def test_success_exit_with_wrong_glass_setting_is_rolled_back(self):
+        self.write_preset(self.image('wallpaper.jpeg'), widgets={'glass': {'enable': True}})
+        self.switch.write_text(f'#!{sys.executable}\nimport json\np={str(self.config)!r}\nd=json.load(open(p)); d["background"]["widgets"]["glass"]["enable"]=False\njson.dump(d,open(p,"w"))\n')
+        before = self.config.read_bytes()
+        with self.assertRaisesRegex(RuntimeError, 'Setting verification'):
             self.apply()
         self.assertEqual(self.config.read_bytes(), before)
 

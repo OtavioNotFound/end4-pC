@@ -4,10 +4,19 @@ import argparse
 import fcntl
 import json
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 
 from preset_resources import atomic_write, backup, describe, map_assets, local_path, read_object, validate
+
+
+def nested(data, field):
+    for key in field.split('.'):
+        if not isinstance(data, dict):
+            return None
+        data = data.get(key)
+    return data
 
 
 def apply(config, preset, filter_program, switchwall):
@@ -21,14 +30,22 @@ def apply(config, preset, filter_program, switchwall):
         filtered = subprocess.run(['jq', '-e', filter_program, str(preset)],
                                   check=True, capture_output=True).stdout
         # Normalize only known asset paths, never shell commands or arbitrary text.
-        incoming = map_assets(json.loads(filtered), lambda value, field:
-                              str(local_path(value, preset.parent)) if isinstance(value, str) and value else value)
+        incoming_assets = {}
+
+        def normalize(value, field):
+            value = str(local_path(value, preset.parent)) if isinstance(value, str) and value else value
+            incoming_assets[field] = value
+            return value
+
+        incoming = map_assets(json.loads(filtered), normalize)
         merged = subprocess.run(['jq', '-s', '.[0] * .[1] | del(._presetMeta)', str(config), '-'],
                                 input=json.dumps(incoming).encode(), check=True, capture_output=True).stdout
         candidate = json.loads(merged)
         issues = validate(candidate, preset.parent)
         if issues:
-            raise ValueError(describe(issues) + '\nUse preset_resources.py FILE --repair-missing to explicitly accept a unique correction.')
+            targets = {preset if issue['field'] in incoming_assets else config for issue in issues}
+            commands = [shlex.join(['python3', str(Path(__file__).with_name('preset_resources.py')), str(target), '--repair-missing']) for target in sorted(targets)]
+            raise ValueError(describe(issues) + '\nExplicit repair / correção explícita (se inequívoca):\n' + '\n'.join(commands))
         if config.read_bytes() != original:
             raise ValueError('Config changed during validation / configuração alterada durante a validação; tente novamente')
         saved = backup(config)
@@ -45,6 +62,9 @@ def apply(config, preset, filter_program, switchwall):
             # persisted instead of accepting an unrelated concurrent replacement.
             if after.get('background', {}).get('wallpaperPath') != candidate.get('background', {}).get('wallpaperPath'):
                 raise RuntimeError('Wallpaper verification failed / falha na verificação do wallpaper')
+            for field in ('background.widgets.glass.enable', 'appearance.transparency.enable', 'appearance.transparency.automatic'):
+                if nested(after, field) != nested(candidate, field):
+                    raise RuntimeError(f'Setting verification failed / falha na verificação: {field}')
             if validate(after, preset.parent):
                 raise RuntimeError('Resource verification failed / falha na verificação dos recursos')
         except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:

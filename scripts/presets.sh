@@ -116,6 +116,7 @@ case "$action" in
             tmp=$(mktemp "$PRESETS_DIR/.save.XXXXXX")
             trap 'rm -f "$tmp"' EXIT
             jq -e "$BLACKLIST_FILTER" "$CONFIG_FILE" > "$tmp"
+            jq -e -s 'length == 1 and (.[0] | type == "object")' "$tmp" >/dev/null
             mv "$tmp" "$PRESETS_DIR/${name}.json"
             trap - EXIT
         else

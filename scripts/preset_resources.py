@@ -68,7 +68,7 @@ def local_path(value, base=None):
     elif '://' in value:
         raise ValueError('remote asset unsupported; download explicitly first')
     path = Path(os.path.expanduser(value))
-    return path if path.is_absolute() else (Path(base or Path.cwd()) / path)
+    return path if path.is_absolute() else (Path(base or Path.cwd()).absolute() / path)
 
 
 def asset_slots(node, trail=()):

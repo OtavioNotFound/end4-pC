@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
-import re
 import shutil
 import stat
 import subprocess
@@ -83,6 +82,8 @@ def prepare_export(preset, folder, program, preview=None):
         return node
 
     data = scrub(data)
+    if isinstance(data.get('profile'), dict) and data['profile'].get('avatarPicture'):
+        data['profile']['avatarPath'] = '.'
     meta = {'preview': '', 'screenshots': [], 'wallpapers': []}
     roles = {'profile.avatarPicture': 'avatar', 'sidebar.bannerImage': 'banner',
              'background.lockWall': 'lockWall', 'background.widgets.customImage.path': 'customImage'}
@@ -172,6 +173,8 @@ def import_zip(archive, destination, program):
         try:
             shutil.copytree(root, cached, dirs_exist_ok=True)
             data = map_assets(data, lambda value, field: str(cached / Path(value).relative_to(root)) if value else value)
+            if isinstance(data.get('profile'), dict) and data['profile'].get('avatarPicture'):
+                data['profile']['avatarPath'] = str(Path(data['profile']['avatarPicture']).parent)
             data['_presetMeta'] = {'source': 'imported'}
             atomic_write(target, (json.dumps(data, indent=2, ensure_ascii=False) + '\n').encode())
         except BaseException:
@@ -190,9 +193,18 @@ def export(preset, destination, program, folder_output=False, preview=None):
         prepare_export(preset, content, program, preview)
         if folder_output:
             target = destination / name
+            saved = None
             if target.exists():
-                raise ValueError(f'{target}: already exists; move it aside explicitly before preparing again')
-            os.replace(content, target)
+                backups = destination / 'backups'
+                backups.mkdir(mode=0o700, exist_ok=True)
+                saved = Path(tempfile.mkdtemp(prefix=f'{name}.', dir=backups))
+                os.replace(target, saved)
+            try:
+                os.replace(content, target)
+            except OSError:
+                if saved:
+                    os.replace(saved, target)
+                raise
         else:
             target = destination / f'{name}.zip'
             zipped = stage / 'bundle.zip'

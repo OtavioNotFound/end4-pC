@@ -56,6 +56,8 @@ def install(json_path, asset_dir, local_dir, origin, display):
 
     try:
         data = map_assets(data, place)
+        if isinstance(data.get('profile'), dict) and data['profile'].get('avatarPicture'):
+            data['profile']['avatarPath'] = str(Path(data['profile']['avatarPicture']).parent)
         meta = data.get('_presetMeta') if isinstance(data.get('_presetMeta'), dict) else {}
         meta.pop('source', None)
         meta['origin'] = origin

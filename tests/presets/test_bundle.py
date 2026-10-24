@@ -78,6 +78,18 @@ class BundleTests(unittest.TestCase):
         self.assertEqual((self.imports / self.preset.name).read_bytes(), before)
         self.assertTrue((self.imports / f'{self.preset.stem}_2.json').exists())
 
+    def test_avatar_directory_tracks_portable_image(self):
+        self.preset.write_text(json.dumps({'profile': {'avatarPicture': str(self.wall), 'avatarPath': str(self.root)}}))
+        data = self.roundtrip()
+        self.assertEqual(Path(data['profile']['avatarPicture']).parent, Path(data['profile']['avatarPath']))
+
+    def test_prepare_folder_twice_keeps_previous_bundle(self):
+        bundle.export(self.preset, self.exports, '.', folder_output=True)
+        old = (self.exports / self.preset.stem / self.preset.name).read_bytes()
+        bundle.export(self.preset, self.exports, '.', folder_output=True)
+        saved = next((self.exports / 'backups').iterdir())
+        self.assertEqual((saved / self.preset.name).read_bytes(), old)
+
     def test_manifest_detects_tampering(self):
         bundle.export(self.preset, self.exports, '.')
         archive = self.exports / f'{self.preset.stem}.zip'
