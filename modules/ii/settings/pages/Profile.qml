@@ -13,6 +13,15 @@ import qs.modules.common.models
 
 ContentPage {
     id: page
+    property string pendingSaveName: ""
+    Connections {
+        target: Presets
+        function onOperationFinished(operation, name, success) {
+            if (operation !== "save" || name !== page.pendingSaveName) return;
+            page.pendingSaveName = "";
+            if (success) presetNameField.value = "";
+        }
+    }
     property string descriptionMode: {
         if (Config.options.profile.descriptionText === "::uptime::") return "uptime"
         return "distro"
@@ -476,6 +485,7 @@ ContentPage {
             GroupedList {
                 ConfigTextArea {
                     id: presetNameField
+                    enabled: !Presets.operationRunning
                     Layout.fillWidth: true
                     fieldWidth: 300
                     buttonIcon: "newsmode"
@@ -485,8 +495,7 @@ ContentPage {
                     confirmButtonVisible: presetNameField.value.trim() !== ""
                     confirmButtonIcon: "save"
                     onConfirmClicked: {
-                        Presets.save(presetNameField.value)
-                        presetNameField.value = ""
+                        page.pendingSaveName = Presets.save(presetNameField.value) || ""
                     }
                 }
 

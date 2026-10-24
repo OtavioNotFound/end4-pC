@@ -50,6 +50,7 @@ preview=""
 origin=""
 display=""
 folder_out=false
+create_only=false
 while [ $# -gt 0 ]; do
     arg="$1"
     if [ "$arg" = "--online" ]; then
@@ -58,6 +59,8 @@ while [ $# -gt 0 ]; do
         imported=true
     elif [ "$arg" = "--folder" ]; then
         folder_out=true
+    elif [ "$arg" = "--create-only" ]; then
+        create_only=true
     elif [ "$arg" = "--preview" ]; then
         shift
         preview="${1:?Error: --preview needs a path}"
@@ -111,13 +114,27 @@ fi
 
 case "$action" in
     --save)
+        if $create_only && [ -e "$PRESETS_DIR/${name}.json" ]; then
+            echo 'A preset with this name already exists. Choose another name or confirm Overwrite in the preset details.' >&2
+            exit 3
+        fi
         if [ ! -e "$PRESETS_DIR/${name}.json" ]; then
             # Stage first; a failed filter must never create an empty preset.
             tmp=$(mktemp "$PRESETS_DIR/.save.XXXXXX")
             trap 'rm -f "$tmp"' EXIT
             jq -e "$BLACKLIST_FILTER" "$CONFIG_FILE" > "$tmp"
             jq -e -s 'length == 1 and (.[0] | type == "object")' "$tmp" >/dev/null
-            mv "$tmp" "$PRESETS_DIR/${name}.json"
+            if $create_only; then
+                # Exclusive link commits the staged file without replacing a
+                # concurrently created preset. Staging is on the same filesystem.
+                if ! ln -T -- "$tmp" "$PRESETS_DIR/${name}.json"; then
+                    echo 'Preset name already exists. Choose another name.' >&2
+                    exit 3
+                fi
+                rm -f "$tmp"
+            else
+                mv "$tmp" "$PRESETS_DIR/${name}.json"
+            fi
             trap - EXIT
         else
             python3 "$SCRIPT_DIR/preset_resources.py" "$PRESETS_DIR/${name}.json" --backup-only >/dev/null

@@ -17,6 +17,8 @@ Singleton {
     property alias importedFolderModel: importedPresetsFolderModel
 
     signal renamed(string oldName, string newName)
+    signal operationFinished(string operation, string name, bool success)
+    readonly property bool operationRunning: saveProc.running || overwriteProc.running || exportZipProc.running || installProc.running || applyProc.running
 
     FolderListModel {
         id: presetsFolderModel
@@ -73,7 +75,14 @@ Singleton {
 
     Process {
         id: saveProc
-        onExited: root.refresh()
+        property string presetName: ""
+        stderr: StdioCollector { id: saveError }
+        onExited: code => {
+            root.refresh()
+            root.operationFinished("save", saveProc.presetName, code === 0)
+            if (code !== 0) Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Preset not saved"), code === 3
+                ? Translation.tr("A preset with this name already exists. Choose a new name, or confirm Overwrite in its details.") : saveError.text.trim()])
+        }
     }
 
     Process {
@@ -103,23 +112,33 @@ Singleton {
 
     Process {
         id: overwriteProc
-        onExited: root.refresh()
+        property string presetName: ""
+        stderr: StdioCollector { id: overwriteError }
+        onExited: code => {
+            root.refresh()
+            root.operationFinished("overwrite", overwriteProc.presetName, code === 0)
+            if (code !== 0) Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Preset not saved"), overwriteError.text.trim()])
+        }
     }
 
     Process {
         id: exportZipProc
+        property string presetName: ""
         stderr: StdioCollector { id: exportError }
         onExited: code => {
+            root.operationFinished("export", exportZipProc.presetName, code === 0)
             if (code !== 0) Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Export failed"), exportError.text.trim()])
         }
     }
 
     Process {
         id: installProc
+        property string presetName: ""
         stdout: StdioCollector { id: installOut }
         stderr: StdioCollector { id: installError }
         onExited: code => {
             root.refresh()
+            root.operationFinished("install", installProc.presetName, code === 0)
             if (code !== 0) {
                 Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Install failed"), installError.text.trim() || Translation.tr("Could not copy the preset files")])
                 return
@@ -352,6 +371,7 @@ Singleton {
     }
 
     function save(rawInput) {
+        if (root.operationRunning) return
         const raw = rawInput.trim()
         if (raw.length === 0) return
 
@@ -367,8 +387,10 @@ Singleton {
         name = name.replace(/\s/g, "_")
         if (name.length === 0) return
 
-        saveProc.command = ["bash", Directories.presetsScriptPath, "--save", name, description]
+        saveProc.presetName = name
+        saveProc.command = ["bash", Directories.presetsScriptPath, "--save", name, description, "--create-only"]
         saveProc.running = true
+        return name
     }
 
     Process {
@@ -433,17 +455,23 @@ Singleton {
     }
 
     function overwrite(name) {
+        if (root.operationRunning) return
+        overwriteProc.presetName = name
         // Overwrite with same name (presets.sh --save filters General+Services)
         overwriteProc.command = ["bash", Directories.presetsScriptPath, "--save", name]
         overwriteProc.running = true
     }
 
     function exportZip(name) {
+        if (root.operationRunning) return
+        exportZipProc.presetName = name
         exportZipProc.command = ["bash", Directories.presetsScriptPath, "--export-zip", name]
         exportZipProc.running = true
     }
 
     function install(name, source) {
+        if (root.operationRunning) return
+        installProc.presetName = name
         const cmd = ["bash", Directories.presetsScriptPath, "--install", name, source === "imported" ? "--imported" : "--online"]
         if (source !== "imported") cmd.push("--origin", PresetsOnline.originOf(name), "--as", PresetsOnline.displayName(name))
         installProc.command = cmd

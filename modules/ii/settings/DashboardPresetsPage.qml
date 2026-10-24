@@ -16,6 +16,7 @@ Item {
     property int staggerMs: 45
     property string source: "mine"
     property var selected: null
+    property string pendingSaveName: ""
 
     readonly property var sources: [
         { id: "mine", name: Translation.tr("My presets"), icon: "person", model: Presets.folderModel, count: Presets.folderModel.count },
@@ -294,6 +295,7 @@ Item {
 
                         TextInput {
                             id: saveInput
+                            readOnly: Presets.operationRunning
                             anchors.fill: parent
                             verticalAlignment: TextInput.AlignVCenter
                             clip: true
@@ -321,7 +323,7 @@ Item {
                         implicitWidth: 36
                         implicitHeight: 36
                         buttonRadius: 18
-                        enabled: saveInput.text.trim() !== ""
+                        enabled: saveInput.text.trim() !== "" && !Presets.operationRunning
                         colBackground: Appearance.colors.colPrimary
                         colBackgroundHover: Appearance.colors.colPrimaryHover
                         downAction: () => Qt.callLater(() => root.saveCurrent())
@@ -768,6 +770,11 @@ Item {
 
     Connections {
         target: Presets
+        function onOperationFinished(operation, name, success) {
+            if (operation !== "save" || name !== root.pendingSaveName) return;
+            root.pendingSaveName = "";
+            if (success) { saveInput.text = ""; saveInput.focus = false; root.pager.forceActiveFocus(); }
+        }
         function onRenamed(oldName, newName) {
             if (newName === "" || root.selected === null || root.selected.name !== oldName) return;
             root.selected = Object.assign({}, root.selected, { name: newName });
@@ -777,9 +784,6 @@ Item {
     function saveCurrent() {
         const text = saveInput.text.trim();
         if (text === "") return;
-        Presets.save(text);
-        saveInput.text = "";
-        saveInput.focus = false;
-        pager.forceActiveFocus();
+        root.pendingSaveName = Presets.save(text) || "";
     }
 }

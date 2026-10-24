@@ -26,6 +26,26 @@ Item {
     signal pageExitRequested()
 
     property bool closing: false
+    property bool confirmOverwrite: false
+    property string pendingOperation: ""
+
+    Timer {
+        id: confirmOverwriteTimer
+        interval: 3000
+        onTriggered: root.confirmOverwrite = false
+    }
+
+    Connections {
+        target: Presets
+        function onOperationFinished(operation, name, success) {
+            if (name !== root.preset.name || operation !== root.pendingOperation) return
+            root.pendingOperation = ""
+            if (!success) return
+            if (operation === "overwrite") { root.overwritten = true; overwrittenTimer.restart(); }
+            else if (operation === "export") { root.exported = true; exportedTimer.restart(); }
+            else if (operation === "install") { root.installed = true; installedTimer.restart(); }
+        }
+    }
 
     function requestExit() {
         closing = true;
@@ -294,7 +314,7 @@ Item {
                             colBackground: Appearance.colors.colPrimary
                             colBackgroundHover: Appearance.colors.colPrimaryHover
                             colRipple: Appearance.colors.colPrimaryActive
-                            downAction: () => Qt.callLater(() => root.commitRename())
+                            onClicked: Qt.callLater(() => root.commitRename())
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
                                 horizontalAlignment: Text.AlignHCenter
@@ -410,7 +430,7 @@ Item {
                 buttonRadius: 24
                 colBackground: Appearance.colors.colLayer1
                 colBackgroundHover: Appearance.colors.colLayer1Hover
-                downAction: () => Qt.callLater(() => root.back())
+                onClicked: Qt.callLater(() => root.back())
                 contentItem: RowLayout {
                     spacing: 8
                     MaterialSymbol {
@@ -444,6 +464,10 @@ Item {
 
                     readonly property bool isDelete: modelData.id === "delete"
                     readonly property bool isUnshare: modelData.id === "unshare"
+                    readonly property bool overwriteArmed: modelData.id === "overwrite" && root.confirmOverwrite
+                    readonly property bool pending: root.pendingOperation === modelData.id
+                    enabled: !Presets.operationRunning
+                    Accessible.name: modelData.label
                     readonly property bool armed: isDelete && root.confirmDelete
                     readonly property bool unshareArmed: isUnshare && root.confirmUnshare
                     readonly property bool done: (modelData.id === "overwrite" && root.overwritten) || (modelData.id === "export" && root.exported) || (modelData.id === "install" && root.installed)
@@ -454,18 +478,24 @@ Item {
                     buttonRadius: 24
                     colBackground: unshareArmed ? Appearance.colors.colPrimary : armed ? Appearance.colors.colError : done ? Appearance.m3colors.m3success : Appearance.colors.colLayer1
                     colBackgroundHover: unshareArmed ? Appearance.colors.colPrimaryHover : armed ? Appearance.colors.colError : done ? Appearance.m3colors.m3success : Appearance.colors.colLayer1Hover
-                    downAction: () => {
+                    onClicked: {
                         const id = modelData.id;
                         Qt.callLater(() => {
                             if (id === "overwrite") {
+                                if (!root.confirmOverwrite) {
+                                    root.confirmOverwrite = true;
+                                    confirmOverwriteTimer.restart();
+                                    return;
+                                }
+                                root.confirmOverwrite = false;
+                                root.overwritten = false;
+                                root.pendingOperation = "overwrite";
                                 root.overwriteRequested();
-                                root.overwritten = true;
-                                overwrittenTimer.restart();
                             }
                             else if (id === "export") {
+                                root.exported = false;
+                                root.pendingOperation = "export";
                                 root.exportRequested();
-                                root.exported = true;
-                                exportedTimer.restart();
                             }
                             else if (id === "rename") {
                                 titleInput.text = PresetsOnline.displayName(root.preset.name).replace(/_/g, " ");
@@ -483,9 +513,9 @@ Item {
                                 }
                             }
                             else if (id === "install") {
+                                root.installed = false;
+                                root.pendingOperation = "install";
                                 root.installRequested();
-                                root.installed = true;
-                                installedTimer.restart();
                             }
                             else if (root.confirmDelete) root.deleteRequested();
                             else {
@@ -503,7 +533,7 @@ Item {
                             color: secondary.unshareArmed ? Appearance.colors.colOnPrimary : secondary.armed ? Appearance.colors.colOnError : secondary.done ? Appearance.m3colors.m3onSuccess : Appearance.colors.colOnLayer1
                         }
                         StyledText {
-                            text: secondary.unshareArmed ? Translation.tr("Tap again to remove") : secondary.armed ? Translation.tr("Tap again to delete") : secondary.done ? (secondary.modelData.id === "export" ? Translation.tr("Exported") : secondary.modelData.id === "install" ? Translation.tr("Installed") : Translation.tr("Overwritten")) : secondary.modelData.label
+                            text: secondary.pending ? Translation.tr("Working…") : secondary.overwriteArmed ? Translation.tr("Tap again to overwrite") : secondary.unshareArmed ? Translation.tr("Tap again to remove") : secondary.armed ? Translation.tr("Tap again to delete") : secondary.done ? (secondary.modelData.id === "export" ? Translation.tr("Exported") : secondary.modelData.id === "install" ? Translation.tr("Installed") : Translation.tr("Overwritten")) : secondary.modelData.label
                             color: secondary.unshareArmed ? Appearance.colors.colOnPrimary : secondary.armed ? Appearance.colors.colOnError : secondary.done ? Appearance.m3colors.m3onSuccess : Appearance.colors.colOnLayer1
                         }
                     }
@@ -517,8 +547,8 @@ Item {
                 colBackground: Appearance.colors.colPrimary
                 colBackgroundHover: Appearance.colors.colPrimaryHover
                 colRipple: Appearance.colors.colPrimaryActive
-                enabled: !root.busy
-                downAction: () => Qt.callLater(() => root.applyRequested())
+                enabled: !root.busy && !Presets.operationRunning
+                onClicked: Qt.callLater(() => root.applyRequested())
                 contentItem: RowLayout {
                     spacing: 8
                     MaterialSymbol {

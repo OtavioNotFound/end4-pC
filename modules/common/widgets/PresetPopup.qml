@@ -9,6 +9,9 @@ Popup {
     id: root
     property var onOverwrite: () => {}
     property var onExportZip: () => {}
+    property bool confirmOverwrite: false
+    onClosed: confirmOverwrite = false
+    Timer { id: confirmTimer; interval: 3000; onTriggered: root.confirmOverwrite = false }
 
     width: 190
     padding: 8
@@ -37,11 +40,14 @@ Popup {
             colBackgroundHover: Appearance.colors.colLayer2Hover
             colRipple: Appearance.colors.colLayer2Active
             horizontalPadding: 12
-            onClicked: { root.close(); root.onOverwrite() }
+            onClicked: {
+                if (!root.confirmOverwrite) { root.confirmOverwrite = true; confirmTimer.restart(); return; }
+                root.close(); root.onOverwrite()
+            }
             contentItem: RowLayout {
                 spacing: 10
                 MaterialSymbol { text: "save_as"; iconSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer0 }
-                StyledText { text: Translation.tr("Overwrite"); color: Appearance.colors.colOnLayer0; Layout.fillWidth: true; font.pixelSize: Appearance.font.pixelSize.small }
+                StyledText { text: root.confirmOverwrite ? Translation.tr("Tap again to overwrite") : Translation.tr("Overwrite"); color: Appearance.colors.colOnLayer0; Layout.fillWidth: true; font.pixelSize: Appearance.font.pixelSize.small; wrapMode: Text.WordWrap }
             }
         }
         RippleButton {
