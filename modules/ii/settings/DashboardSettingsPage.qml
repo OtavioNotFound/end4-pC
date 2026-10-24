@@ -82,7 +82,7 @@ Item {
     }
 
     function baseSpan(type) {
-        if (type === "style") return [root.width < 1000 ? 4 : 2, 2];
+        if (type === "style") return [root.width < 1200 ? 4 : 2, 2];
         if (type === "schemes" || type === "barpos") return [2, 2];
         if (type === "weathermap") return [4, 2];
         if (type === "webapps") return [4, 3];
@@ -103,7 +103,6 @@ Item {
         { id: "hero:displays", type: "action", title: Translation.tr("Displays"), description: Translation.tr("Resolution, scale and monitor arrangement."), icon: "monitor", section: WM.compositor === "niri" ? Translation.tr("Niri") : Translation.tr("Hyprland"), actionId: "displays", kw: "monitor display resolution scale tela resolução escala" },
         { id: "hero:all", type: "action", title: Translation.tr("All settings"), description: Translation.tr("Includes fonts, services and advanced options."), icon: "settings", section: Translation.tr("General"), actionId: "all", kw: "advanced fonts ai autostart avançado fontes serviços" },
         { id: "hero:diagnostics", type: "action", title: Translation.tr("Check configuration"), description: Translation.tr("Find missing images and dependencies."), icon: "fact_check", section: Translation.tr("General"), actionId: "diagnostics", kw: "doctor health diagnostic errors dependências diagnóstico erros" },
-        { id: "hero:style", type: "style", title: Translation.tr("Settings panel style"), section: Translation.tr("Interface"), kw: "settings panel style default minimal dashboard window overlay" },
         { id: "hero:blur", type: "toggle", key: "desktop:Blur wall", title: Translation.tr("Blur wallpaper"), icon: "blur_on", section: Translation.tr("Desktop"), kw: "blur wallpaper background" },
         { id: "hero:transparency", type: "toggle", key: "interface:Transparency/Enable", title: Translation.tr("Transparency"), icon: "opacity", section: Translation.tr("Interface"), kw: "transparency opacity transparência opacidade automático manual wallpaper" },
         { id: "hero:glass", type: "toggle", key: "interface:Glassy UI", title: Translation.tr("Glassy UI"), icon: "water_drop", section: Translation.tr("Interface"), kw: "glassy ui liquid glass frosted blur translucent ui panels bar sidebars dock widgets vidro papel de parede wallpaper" },
@@ -113,6 +112,7 @@ Item {
         { id: "hero:uibg", type: "select", w: 2, key: "interface:UI background", title: Translation.tr("UI background"), icon: "format_color_fill", section: Translation.tr("Interface"), kw: "ui background oled black amoled themed dark surface layer panels sidebars" },
         { id: "hero:palette", type: "palette", when: "material", key: "interface:Palette type", title: Translation.tr("Palette style"), icon: "auto_awesome", section: Translation.tr("Interface"), kw: "palette style scheme auto content expressive fidelity fruit salad monochrome neutral rainbow tonal spot material you dynamic" },
         { id: "hero:barpos", type: "barpos", title: Translation.tr("Bar position"), section: Translation.tr("Bar"), kw: "bar position top bottom left right vertical panel" },
+        { id: "hero:style", type: "style", title: Translation.tr("Settings panel style"), section: Translation.tr("General"), kw: "settings panel style default minimal dashboard window overlay" },
         { id: "hero:tooltips", type: "toggle", w: 2, searchable: true, key: "bar:Tooltips/Enable", title: Translation.tr("Tooltips"), icon: "tooltip", section: Translation.tr("Bar"), kw: "bar tooltips enable hover" },
         { id: "hero:tooltipsClick", type: "toggle", w: 2, searchable: true, key: "bar:Click to show", title: Translation.tr("Click to show"), icon: "ads_click", section: Translation.tr("Bar"), kw: "bar tooltips click to show" },
         { id: "hero:tooltipsStyle", type: "select", w: 4, searchable: true, key: "bar:Tooltips/Style", title: Translation.tr("Tooltip style"), icon: "tooltip", section: Translation.tr("Bar"), kw: "bar tooltips style morph attached popup" }
@@ -136,7 +136,8 @@ Item {
         }));
         return list.map(e => Object.assign(e, {
             group: SettingsHelp.category(e.group),
-            title: e.kind === "card" ? SettingsHelp.title(e.key, e.title) : e.title,
+            page: e.page ? SettingsHelp.categoryTitle(SettingsHelp.category(e.page)) : e.page,
+            title: e.kind === "card" ? SettingsHelp.title(e.key, e.title) : e.searchOnly ? SettingsHelp.categoryTitle(SettingsHelp.category(e.group)) : e.title,
             shape: shapePool[Math.floor(Math.random() * shapePool.length)],
             travelX: (Math.random() - 0.5) * 500,
             travelY: (Math.random() - 0.5) * 400
