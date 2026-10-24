@@ -1,128 +1,84 @@
 #!/usr/bin/env python3
-import hashlib
+"""Install validated cached assets without searching or overwriting user pictures."""
 import json
-import os
+from pathlib import Path
 import re
 import shutil
 import sys
-from pathlib import Path
 
-json_path, asset_dir, local_dir, origin, display = sys.argv[1:6]
-home = Path.home()
-dest = {
-    "wallpaper": home / "Pictures" / "Wallpapers",
-    "avatar": home / "Pictures" / "avatar",
-    "asset": home / "Pictures" / "preset-assets",
-}
-wallpaper_keys = {"wallpaperPath", "centeredWallpaperImage", "lockWall"}
-image_name = re.compile(r"\.(png|jpe?g|webp)$", re.IGNORECASE)
-missing = []
-local_index = None
+from preset_bundle import digest
+from preset_resources import atomic_write, describe, local_path, map_assets, read_object, validate
 
 
-def find_local(name):
-    global local_index
-    if local_index is None:
-        local_index = {}
-        root = home / "Pictures"
-        for folder, dirs, files in os.walk(root, followlinks=True):
-            depth = len(Path(folder).relative_to(root).parts)
-            if depth >= 3:
-                dirs[:] = []
-            for file in files:
-                local_index.setdefault(file, Path(folder) / file)
-    return local_index.get(name)
-prefix = asset_dir.rstrip("/") + "/"
+def install(json_path, asset_dir, local_dir, origin, display):
+    source = Path(json_path)
+    assets = Path(asset_dir)
+    data = read_object(source)
 
-
-def digest(path):
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def place(src, role):
-    folder = dest[role]
-    folder.mkdir(parents=True, exist_ok=True)
-    target = folder / src.name
-    if not target.exists():
-        shutil.copy2(src, target)
-        return target
-    src_hash = digest(src)
-    if digest(target) == src_hash:
-        return target
-    alt = folder / f"{src.stem}-{src_hash[:8]}{src.suffix}"
-    if not alt.exists():
-        shutil.copy2(src, alt)
-    return alt
-
-
-def convert(value, trail):
-    if value.startswith(prefix):
-        src = Path(value)
-        if not src.is_file() or src.stat().st_size == 0:
-            found = find_local(src.name)
-            if found and found.stat().st_size > 0:
-                return str(found)
-            missing.append(src.name)
+    def resolve(value, field):
+        if not value:
             return value
-        key = trail[-1] if trail else ""
-        if "collage" in trail or key in wallpaper_keys:
-            role = "wallpaper"
-        elif key == "avatarPicture":
-            role = "avatar"
+        path = local_path(value, assets)
+        if path.is_file():
+            return str(path)
+        bundled = assets / path.name
+        return str(bundled) if bundled.is_file() else str(path)
+
+    data = map_assets(data, resolve)
+    issues = validate(data, assets)
+    if issues:
+        raise ValueError(describe(issues))
+    home = Path.home()
+    created = []
+
+    def place(value, field):
+        if not value:
+            return value
+        src = Path(value)
+        if field.endswith('avatarPicture'):
+            folder = home / 'Pictures/avatar'
+        elif field.startswith('background.') and ('wallpaper' in field.lower() or 'lockWall' in field or '.collage.' in field):
+            folder = home / 'Pictures/Wallpapers'
         else:
-            role = "asset"
-        return str(place(src, role))
-    if value.rstrip("/") == prefix.rstrip("/") and trail and trail[-1] == "avatarPath":
-        dest["avatar"].mkdir(parents=True, exist_ok=True)
-        return str(dest["avatar"])
-    if "/" not in value and image_name.search(value):
-        found = find_local(value)
-        if found:
-            return str(found)
-        missing.append(value)
-    return value
+            folder = home / 'Pictures/preset-assets'
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / src.name
+        sha = digest(src)
+        if target.exists() and digest(target) != sha:
+            target = folder / f'{src.stem}-{sha}{src.suffix}'
+        if target.exists() and digest(target) != sha:
+            raise ValueError(f'Asset collision / colisão: {target}')
+        if not target.exists():
+            with target.open('xb') as output, src.open('rb') as input_file:
+                created.append(target)
+                shutil.copyfileobj(input_file, output)
+        return str(target)
+
+    try:
+        data = map_assets(data, place)
+        meta = data.get('_presetMeta') if isinstance(data.get('_presetMeta'), dict) else {}
+        meta.pop('source', None)
+        meta['origin'] = origin
+        data['_presetMeta'] = meta
+        safe = re.sub(r'[^\w.-]+', '_', display).strip('._') or 'preset'
+        folder = Path(local_dir)
+        folder.mkdir(parents=True, exist_ok=True)
+        out = folder / f'{safe}.json'
+        index = 2
+        while out.exists():
+            out = folder / f'{safe}_{index}.json'
+            index += 1
+        atomic_write(out, (json.dumps(data, indent=2, ensure_ascii=False) + '\n').encode())
+    except BaseException:
+        for path in created:
+            path.unlink(missing_ok=True)
+        raise
+    print(out)
 
 
-def walk(node, trail):
-    if isinstance(node, dict):
-        return {k: walk(v, trail + [k]) for k, v in node.items()}
-    if isinstance(node, list):
-        return [walk(v, trail) for v in node]
-    if isinstance(node, str):
-        if trail and trail[-1] == "tree" and "collage" in trail:
-            try:
-                inner = json.loads(node)
-            except ValueError:
-                return node
-            return json.dumps(walk(inner, trail), separators=(",", ":"))
-        return convert(node, trail)
-    return node
-
-
-with open(json_path, encoding="utf-8") as f:
-    data = json.load(f)
-
-data = walk(data, [])
-meta = data.get("_presetMeta") if isinstance(data.get("_presetMeta"), dict) else {}
-meta.pop("source", None)
-meta["origin"] = origin
-data["_presetMeta"] = meta
-
-safe = re.sub(r"[^\w.-]+", "_", display).strip("._") or "preset"
-folder = Path(local_dir)
-folder.mkdir(parents=True, exist_ok=True)
-name = safe
-n = 2
-while (folder / f"{name}.json").exists():
-    name = f"{safe}_{n}"
-    n += 1
-out = folder / f"{name}.json"
-with open(out, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-print(out)
-if missing:
-    print("missing: " + ", ".join(sorted(set(missing))))
+if __name__ == '__main__':
+    try:
+        install(*sys.argv[1:6])
+    except (OSError, ValueError, TypeError, AttributeError) as error:
+        print(f'Install failed / instalação falhou: {error}', file=sys.stderr)
+        sys.exit(2)

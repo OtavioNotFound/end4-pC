@@ -108,15 +108,20 @@ Singleton {
 
     Process {
         id: exportZipProc
+        stderr: StdioCollector { id: exportError }
+        onExited: code => {
+            if (code !== 0) Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Export failed"), exportError.text.trim()])
+        }
     }
 
     Process {
         id: installProc
         stdout: StdioCollector { id: installOut }
+        stderr: StdioCollector { id: installError }
         onExited: code => {
             root.refresh()
             if (code !== 0) {
-                Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Install failed"), Translation.tr("Could not copy the preset files")])
+                Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Install failed"), installError.text.trim() || Translation.tr("Could not copy the preset files")])
                 return
             }
             const lines = installOut.text.trim().split("\n")
@@ -339,7 +344,11 @@ Singleton {
 
     Process {
         id: importZipProc
-        onExited: root.refreshImported()
+        stderr: StdioCollector { id: importError }
+        onExited: code => {
+            root.refreshImported()
+            if (code !== 0) Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Import failed"), importError.text.trim()])
+        }
     }
 
     function save(rawInput) {
@@ -362,20 +371,40 @@ Singleton {
         saveProc.running = true
     }
 
-    function apply(name) {
-        GlobalStates.settingsOpen = false
+    Process {
+        id: applyProc
+        stderr: StdioCollector { id: applyError }
+        onExited: code => {
+            Config.endPresetUpdate()
+            if (code !== 0) {
+                Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Preset not applied"), applyError.text.trim()])
+                return
+            }
+            GlobalStates.settingsOpen = false
+        }
+    }
+
+    function applyPreset(name, source) {
+        if (applyProc.running) return
+        if (!Config.beginPresetUpdate()) {
+            Quickshell.execDetached(["notify-send", "-a", "Presets", Translation.tr("Preset not applied"), Translation.tr("Could not save pending settings. Try again after saving the configuration.")])
+            return
+        }
         Collage.armEntrance()
         Wallpapers.confirmedPath = ""
         Wallpapers.previewPath = ""
-        Quickshell.execDetached(["bash", Directories.presetsScriptPath, "--apply", name])
+        const command = ["bash", Directories.presetsScriptPath, "--apply", name]
+        if (source) command.push(source)
+        applyProc.command = command
+        applyProc.running = true
+    }
+
+    function apply(name) {
+        root.applyPreset(name, "")
     }
 
     function applyOnline(name) {
-        GlobalStates.settingsOpen = false
-        Collage.armEntrance()
-        Wallpapers.confirmedPath = ""
-        Wallpapers.previewPath = ""
-        Quickshell.execDetached(["bash", Directories.presetsScriptPath, "--apply", name, "--online"])
+        root.applyPreset(name, "--online")
     }
 
     function remove(name) {
@@ -400,11 +429,7 @@ Singleton {
     }
 
     function applyImported(name) {
-        GlobalStates.settingsOpen = false
-        Collage.armEntrance()
-        Wallpapers.confirmedPath = ""
-        Wallpapers.previewPath = ""
-        Quickshell.execDetached(["bash", Directories.presetsScriptPath, "--apply", name, "--imported"])
+        root.applyPreset(name, "--imported")
     }
 
     function overwrite(name) {

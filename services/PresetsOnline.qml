@@ -231,7 +231,8 @@ Singleton {
     }
 
     function startAssets(name, stagingJsonPath, folderAssets, wallpaperFiles) {
-        const dir = root.assetDir(name);
+        // Keep the previous cache intact until the new JSON has been validated.
+        const dir = root.assetDir(name) + "-" + Date.now();
         assetsProc.entryName = name;
         assetsProc.stagingJsonPath = stagingJsonPath;
         assetsProc.assetCacheDirPath = dir;
@@ -248,7 +249,7 @@ Singleton {
 
         let cmd = `mkdir -p ${root.shQuote(dir)}`;
         for (const asset of toDownload)
-            cmd += ` && curl -sSL ${root.shQuote(asset.url)} -o ${root.shQuote(dir + "/" + asset.filename)}`;
+            cmd += ` && curl --fail -sSL ${root.shQuote(asset.url)} -o ${root.shQuote(dir + "/" + asset.filename)}`;
         assetsProc.command = ["bash", "-c", cmd];
         assetsProc.running = true;
     }
@@ -400,7 +401,7 @@ Singleton {
             const sanitize = root.activeEntry?.sanitize ?? false;
             const jqFilter = (sanitize ? root.shareFilter : "") + '$files as $files | def fix: walk(if type == "string" then ((split("/") | last) as $base | if ($files | index($base)) then ($dir + "/" + $base) else . end) else . end); fix | if (.background.collage.tree? // null) != null then .background.collage.tree |= (try (fromjson | fix | tojson) catch .) else . end | if has("profile") then .profile.avatarPath = $dir else . end | ._presetMeta.source = "online"';
             const filesJson = JSON.stringify(assetsProc.assetFilenames);
-            const cmd = `jq --arg dir ${root.shQuote(assetsProc.assetCacheDirPath)} --argjson files ${root.shQuote(filesJson)} ${root.shQuote(jqFilter)} ${root.shQuote(assetsProc.stagingJsonPath)} > ${root.shQuote(finalJsonPath)} && rm -f ${root.shQuote(assetsProc.stagingJsonPath)}`;
+            const cmd = `tmp=$(mktemp ${root.shQuote(finalJsonPath + ".XXXXXX")}) || exit 1; trap 'rm -f "$tmp"' EXIT; jq --arg dir ${root.shQuote(assetsProc.assetCacheDirPath)} --argjson files ${root.shQuote(filesJson)} ${root.shQuote(jqFilter)} ${root.shQuote(assetsProc.stagingJsonPath)} > "$tmp" && python3 ${root.shQuote(Directories.scriptPath + "/preset_resources.py")} "$tmp" && mv "$tmp" ${root.shQuote(finalJsonPath)} && rm -f ${root.shQuote(assetsProc.stagingJsonPath)}`;
             rewriteProc.command = ["bash", "-c", cmd];
             rewriteProc.running = true;
         }
@@ -408,12 +409,13 @@ Singleton {
 
     Process {
         id: rewriteProc
+        stderr: StdioCollector { id: rewriteError }
         onExited: code => {
             if (code === 0) {
                 Presets.refreshOnline();
                 root.downloadingName = "";
             } else {
-                root.fail(Translation.tr("Failed to finalize preset"));
+                root.fail(rewriteError.text.trim() || Translation.tr("Failed to finalize preset"));
             }
         }
     }

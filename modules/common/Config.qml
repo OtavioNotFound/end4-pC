@@ -13,6 +13,26 @@ Singleton {
     property int readWriteDelay: 50 // milliseconds
     property bool blockWrites: false
 
+    function beginPresetUpdate() {
+        if (root.blockWrites) return false
+        // Flush an outstanding local toggle before the external reader starts.
+        if (fileWriteTimer.running) {
+            configFileView.writeAdapter()
+            if (!configFileView.waitForJob()) return false
+        }
+        root.blockWrites = true
+        fileWriteTimer.stop()
+        fileReloadTimer.stop()
+        return true
+    }
+
+    function endPresetUpdate() {
+        configFileView.reload()
+        configFileView.waitForJob()
+        fileWriteTimer.stop()
+        root.blockWrites = false
+    }
+
     function setNestedValue(nestedKey, value) {
         let keys = nestedKey.split(".");
         let obj = root.options;
@@ -57,7 +77,7 @@ Singleton {
         interval: root.readWriteDelay
         repeat: false
         onTriggered: {
-            configFileView.writeAdapter()
+            if (!root.blockWrites) configFileView.writeAdapter()
         }
     }
 
@@ -66,8 +86,8 @@ Singleton {
         path: root.filePath
         watchChanges: true
         blockWrites: root.blockWrites
-        onFileChanged: fileReloadTimer.restart()
-        onAdapterUpdated: fileWriteTimer.restart()
+        onFileChanged: if (!root.blockWrites) fileReloadTimer.restart()
+        onAdapterUpdated: if (!root.blockWrites) fileWriteTimer.restart()
         onLoaded: root.ready = true
         onLoadFailed: error => {
             if (error == FileViewError.FileNotFound) {
