@@ -14,7 +14,7 @@ config_json_replace() {
     local tmp
     tmp="$(mktemp "${file}.XXXXXX")" || return 1
 
-    if cat > "$tmp" && jq empty "$tmp" >/dev/null 2>&1; then
+    if cat > "$tmp" && jq -e -s 'length == 1 and (.[0] | type == "object")' "$tmp" >/dev/null 2>&1; then
         mv "$tmp" "$file"
     else
         rm -f "$tmp"
@@ -34,7 +34,7 @@ config_json_update() {
     local tmp
     tmp="$(mktemp "${file}.XXXXXX")" || return 1
 
-    if jq "$@" "$file" > "$tmp" 2>/dev/null && jq empty "$tmp" >/dev/null 2>&1; then
+    if jq "$@" "$file" > "$tmp" 2>/dev/null && jq -e -s 'length == 1 and (.[0] | type == "object")' "$tmp" >/dev/null 2>&1; then
         mv "$tmp" "$file"
     else
         rm -f "$tmp"
