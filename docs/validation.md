@@ -94,10 +94,12 @@ Executar em sessão de teste com HOME/configurações isoladas:
 - A fase de auditoria e este ciclo de correções não representam aceite gráfico
   completo da definição de pronto da especificação.
 
-Não houve push, PR, fork remoto, instalação de pacotes, reinício da sessão
-pessoal nem execução de comandos de configuração contra os arquivos do usuário.
+Durante a validação não houve publicação remota. Após autorização explícita,
+o código foi publicado em [OtavioNotFound/end4-pC](https://github.com/OtavioNotFound/end4-pC).
+Não houve PR no upstream, instalação de pacotes, reinício da sessão pessoal
+nem execução de comandos de configuração contra os arquivos do usuário.
 
 **English:** all listed automated checks passed locally. Visual equivalence,
 real gallery downloads, compositor behavior, full version compatibility and
-global theme rollback remain unverified. No remote publication or personal
-configuration changes were performed.
+global theme rollback remain unverified. The linked fork was published with
+explicit authorization; personal configuration was not changed.

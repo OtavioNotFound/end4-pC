@@ -11,7 +11,7 @@ Customized and maintained by **pctrade**
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-**Local reliability fork:** [Guia em português](docs/getting-started.md) ·
+**[Reliability fork by OtavioNotFound](https://github.com/OtavioNotFound/end4-pC):** [Guia em português](docs/getting-started.md) ·
 [Configuration](docs/configuration.md) · [Presets](docs/presets.md) ·
 [Glassy UI](docs/glassy-ui.md) · [Troubleshooting](docs/troubleshooting.md) ·
 [Development and tests](docs/development.md) · [Audit](docs/audit.md).
@@ -71,7 +71,7 @@ Share your whole desktop with one button, or try someone else's in a click.
 
 ```bash
 cd ~/.config/quickshell/
-git clone https://github.com/pctrade/end4-pC.git
+git clone https://github.com/OtavioNotFound/end4-pC.git
 qs kill -c end4-pC
 qs -c end4-pC --daemonize
 ```

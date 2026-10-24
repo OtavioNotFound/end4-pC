@@ -77,14 +77,15 @@ fork com os mesmos presets/monitores/fontes, cada versão em configuração
 isolada. Não rode as duas contra o mesmo arquivo ativo. Capturas precisam
 incluir barra, dock, dashboard, widgets, sidebars, lockscreen e transições.
 
-Os commits são locais. `origin` ainda aponta para o projeto de referência.
-Para publicar depois de autorizar, crie seu fork na conta desejada, configure
-um remoto com a URL real desse fork e revise `git remote -v` antes de qualquer
-push. Não há URL de fork remoto nem PR criado nesta entrega. Consulte
+O fork público é [OtavioNotFound/end4-pC](https://github.com/OtavioNotFound/end4-pC),
+publicado após autorização explícita do usuário. Sua branch padrão é
+`fix/preset-resource-reliability`. No checkout de desenvolvimento, `fork` aponta
+para esse repositório e `origin` permanece apontando para o projeto de referência;
+confira `git remote -v` antes de publicar. Não foi aberto PR no upstream. Consulte
 `git log --oneline` para revisar os commits e `git diff cbe1aad..HEAD` para o diff.
 Para descartar a implantação, pare a instância, restaure o snapshot e execute
 a versão anterior; não é necessário apagar esta branch nem usar reset destrutivo.
 
 **English:** use `python3 scripts/run_checks.py`. Fixtures and runtime stubs
 are isolated from personal configuration. Headless checks do not replace the
-graphical acceptance matrix. Keep changes local until publication is authorized.
+graphical acceptance matrix. Publication to the linked fork was explicitly authorized.

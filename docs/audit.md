@@ -3,7 +3,10 @@
 Base local: `cbe1aad`, branch inicial `main`, checkout limpo. Remoto configurado:
 `https://github.com/pctrade/end4-pC`. Licença GPL v3, créditos mantidos.
 A especificação de referência está em `../END4_PC_FORK_SPEC.md`, fora do checkout.
-Não foi criado fork remoto. Nenhum comando de publicação foi executado.
+Na Fase A, não foi criado fork remoto nem executada publicação.
+Após autorização explícita do usuário, o fork público foi criado em
+[OtavioNotFound/end4-pC](https://github.com/OtavioNotFound/end4-pC), com a branch
+`fix/preset-resource-reliability` como padrão. O upstream permanece inalterado.
 
 ## Escopo e arquitetura
 
