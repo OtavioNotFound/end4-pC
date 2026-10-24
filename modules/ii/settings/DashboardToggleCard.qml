@@ -16,6 +16,25 @@ DashboardCard {
     property var override: null
     property string actionIcon: ""
     property string actionTip: ""
+    readonly property string helpText: {
+        if (controlKey === "interface:Glassy UI") {
+            const path = Config.options.background.wallpaperPath
+            if (path && WallpaperResources.resources[path]?.issue)
+                return Translation.tr("Wallpaper unavailable. Check its path before using Glassy UI. Changes apply immediately.")
+            return Translation.tr("Glassy UI samples the wallpaper. It requires a valid image; compositor blur is a separate setting. Changes apply immediately.")
+        }
+        if (controlKey === "interface:Automatic (from wallpaper)")
+            return Translation.tr("Adjusts transparency from the wallpaper. Manual values remain saved. Changes apply immediately.")
+        return ""
+    }
+    Accessible.name: root.title
+    Accessible.role: Accessible.CheckBox
+    Accessible.checkable: true
+    Accessible.checked: root.checked
+    activeFocusOnTab: true
+    border.width: root.activeFocus ? 1 : 0
+    border.color: Appearance.colors.colPrimary
+    Keys.onSpacePressed: if (root.control) root.control.set(!root.checked)
 
     signal actionTriggered()
     readonly property var control: override ?? SettingsQuickControls.controls[controlKey] ?? null
@@ -117,13 +136,20 @@ DashboardCard {
     }
 
     MouseArea {
+        id: toggleMouse
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
             if (!root.control) return;
             const next = !root.checked;
             Qt.callLater(() => root.control.set(next));
         }
+    }
+
+    StyledToolTip {
+        text: root.helpText
+        extraVisibleCondition: root.helpText !== "" && toggleMouse.containsMouse
     }
 
     RippleButton {

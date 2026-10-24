@@ -733,5 +733,12 @@
   "Tint app icons": "Colorir ícones de app",
   "Color picker": "Seletor de cores",
   "Night Light | Right-click to toggle Auto mode": "Luz Noturna | Botão direito para alternar modo Auto",
-  "Inactive": "Inativo"
+  "Inactive": "Inativo",
+  "Preset not applied": "Preset não aplicado",
+  "Could not save pending settings. Try again after saving the configuration.": "Não foi possível salvar os ajustes pendentes. Tente novamente após salvar a configuração.",
+  "Export failed": "Falha ao exportar",
+  "Import failed": "Falha ao importar",
+  "Wallpaper unavailable. Check its path before using Glassy UI. Changes apply immediately.": "Wallpaper indisponível. Confira o caminho antes de usar Glassy UI. As alterações são imediatas.",
+  "Glassy UI samples the wallpaper. It requires a valid image; compositor blur is a separate setting. Changes apply immediately.": "Glassy UI usa o wallpaper e precisa de uma imagem válida. O blur do compositor é separado. As alterações são imediatas.",
+  "Adjusts transparency from the wallpaper. Manual values remain saved. Changes apply immediately.": "Ajusta a transparência a partir do wallpaper. Os valores manuais continuam salvos. As alterações são imediatas."
 }

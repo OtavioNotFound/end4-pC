@@ -1265,5 +1265,12 @@
   "Choose how the battery looks in the bar": "Choose how the battery looks in the bar",
   "Magnification": "Magnification",
   "Magnification amount": "Magnification amount",
-  "Magnification amount (%)": "Magnification amount (%)"
+  "Magnification amount (%)": "Magnification amount (%)",
+  "Preset not applied": "Preset not applied",
+  "Could not save pending settings. Try again after saving the configuration.": "Could not save pending settings. Try again after saving the configuration.",
+  "Export failed": "Export failed",
+  "Import failed": "Import failed",
+  "Wallpaper unavailable. Check its path before using Glassy UI. Changes apply immediately.": "Wallpaper unavailable. Check its path before using Glassy UI. Changes apply immediately.",
+  "Glassy UI samples the wallpaper. It requires a valid image; compositor blur is a separate setting. Changes apply immediately.": "Glassy UI samples the wallpaper. It requires a valid image; compositor blur is a separate setting. Changes apply immediately.",
+  "Adjusts transparency from the wallpaper. Manual values remain saved. Changes apply immediately.": "Adjusts transparency from the wallpaper. Manual values remain saved. Changes apply immediately."
 }
