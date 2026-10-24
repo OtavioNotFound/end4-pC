@@ -58,15 +58,20 @@ class SettingsRuntimeTests(unittest.TestCase):
     def test_diagnostics_uses_existing_doctor_and_displays_private_asset_paths(self):
         self.runtime.config.write_text(json.dumps({'background': {'wallpaperPath': '/fixture/missing-wallpaper.png'}}))
         result = self.runtime.run('''
+    Item { id: pager; property string searchQuery: ""; signal pageExitRequested() }
+    Window {
+        visible: true; width: 1100; height: 680
+        DashboardSettingsPage { id: page; anchors.fill: parent; pager: pager }
+    }
     Timer {
         running: Config.ready; interval: 150
-        onTriggered: SettingsDiagnostics.run()
+        onTriggered: page.activateAction("diagnostics")
     }
     Timer {
         running: true; repeat: true; interval: 100
         onTriggered: {
             if (SettingsDiagnostics.completed) {
-                if (!SettingsDiagnostics.checks.length || SettingsDiagnostics.assets[0]?.path !== "/fixture/missing-wallpaper.png") {
+                if (!page.diagnosisOpen || !SettingsDiagnostics.checks.length || SettingsDiagnostics.assets[0]?.path !== "/fixture/missing-wallpaper.png") {
                     console.error("UX_TEST_FAIL diagnostic assets"); Qt.quit(); return
                 }
                 console.log("UX_TEST_PASS"); Qt.quit()

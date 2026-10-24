@@ -91,6 +91,7 @@ Singleton {
 id: root
 property bool settingsOpen: false
 property bool settingsDetailedView: false
+property bool settingsDiagnosticsOpen: false
 property var settingsTarget: null
 property string dashboardGroup: ""
 property int dashboardPage: 4

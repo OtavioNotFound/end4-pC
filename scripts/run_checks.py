@@ -24,6 +24,7 @@ QML_FILES += [
     'modules/common/widgets/ConfigSwitch.qml', 'modules/common/widgets/ConfigSlider.qml',
     'modules/common/widgets/PresetPopup.qml', 'modules/common/widgets/StyledToolTip.qml',
     'modules/common/widgets/StyledToolTipContent.qml', 'modules/ii/overview/SearchItem.qml',
+    'modules/common/widgets/NoticeBox.qml',
 ]
 QML_FILES += [str(path.relative_to(ROOT)) for path in sorted((ROOT / 'modules/ii/settings').rglob('*.qml'))]
 QML_FILES = list(dict.fromkeys(QML_FILES))

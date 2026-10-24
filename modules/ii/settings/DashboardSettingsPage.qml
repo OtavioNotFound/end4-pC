@@ -1067,7 +1067,7 @@ Item {
         anchors.fill: parent
         active: root.diagnosisOpen
         sourceComponent: DashboardDiagnosticsPage {
-            onBack: root.diagnosisOpen = false
+            onBack: { root.diagnosisOpen = false; root.pager.forceActiveFocus(); }
             onChooseWallpaper: { root.diagnosisOpen = false; root.pager.goToPage(root.pager.wallpapersPage); }
         }
     }

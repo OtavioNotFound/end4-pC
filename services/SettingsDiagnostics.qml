@@ -26,11 +26,15 @@ Singleton {
 
     function label(check) {
         const labels = {
+            "qs": "Quickshell", "hyprctl": "Hyprland command interface", "magick": "Image decoder (ImageMagick)",
+            "quickshell-version": "Quickshell version", "hyprland-version": "Hyprland version",
+            "font-substitution": "Font substitution", "avatar-directory": "Avatar folder",
             "config-json": "Configuration file", "config-json-or-schema": "Configuration file",
             "asset": "Image resources", "generated-colors": "Generated colors", "wallpaper-order": "Wallpaper order",
             "wayland-session": "Wayland session", "glass-wallpaper": "Glassy UI wallpaper", "video-thumbnail": "Video thumbnail",
             "geoclue": "Automatic location", "desktop-portal": "Desktop portal"
         }
+        if (check.startsWith("bundled-icon:")) return Translation.tr("Bundled icons") + " · " + check.slice(13)
         return labels[check] ? Translation.tr(labels[check]) : check
     }
 
@@ -44,7 +48,9 @@ Singleton {
         onExited: code => {
             try {
                 const result = JSON.parse(output.text)
-                if (code > 1 || !Array.isArray(result.checks)) throw new Error("Invalid doctor result")
+                if (code > 1 || !Array.isArray(result.checks)
+                        || result.checks.some(check => !check || typeof check.check !== "string" || typeof check.status !== "string")
+                        || !Array.isArray(result.assets ?? [])) throw new Error("Invalid doctor result")
                 root.checks = result.checks
                 root.assets = result.assets ?? []
                 root.completed = true

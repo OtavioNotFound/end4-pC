@@ -69,6 +69,7 @@ Item {
     }
 
     ColumnLayout {
+        visible: !GlobalStates.settingsDiagnosticsOpen
         anchors {
             fill: parent
             margins: contentPadding
@@ -308,6 +309,17 @@ Item {
                         }
                     }
                 }
+            }
+        }
+    }
+    Loader {
+        anchors.fill: parent
+        active: GlobalStates.settingsDiagnosticsOpen
+        sourceComponent: DashboardDiagnosticsPage {
+            onBack: { GlobalStates.settingsDiagnosticsOpen = false; root.forceActiveFocus(); }
+            onChooseWallpaper: {
+                GlobalStates.settingsDiagnosticsOpen = false;
+                GlobalStates.openSettingsAt("desktop", Translation.tr("Wallpaper"), Translation.tr("Wallpaper"));
             }
         }
     }

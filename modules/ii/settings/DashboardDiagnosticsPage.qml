@@ -56,6 +56,7 @@ Item {
                     model: SettingsDiagnostics.assets
                     delegate: NoticeBox {
                         required property var modelData
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         text: [modelData.field, modelData.path, modelData.reason,
                             modelData.candidates.length === 1 ? Translation.tr("Suggested file: %1").arg(modelData.candidates[0]) : ""].filter(value => value).join("\n")
@@ -72,6 +73,7 @@ Item {
                     model: SettingsDiagnostics.checks
                     delegate: NoticeBox {
                         required property var modelData
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         materialIcon: modelData.status === "ok" ? "check_circle" : "info"
                         text: SettingsDiagnostics.label(modelData.check) + " · " + SettingsDiagnostics.status(modelData.status)

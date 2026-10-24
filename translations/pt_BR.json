@@ -870,5 +870,13 @@
   "Dock style": "Estilo do dock",
   "Color scheme": "Esquema de cores",
   "Material follows your wallpaper": "Material acompanha seu wallpaper",
-  "Niri": "Niri"
+  "Niri": "Niri",
+  "Quickshell": "Quickshell",
+  "Hyprland command interface": "Interface de comandos do Hyprland",
+  "Image decoder (ImageMagick)": "Leitor de imagens (ImageMagick)",
+  "Quickshell version": "Versão do Quickshell",
+  "Hyprland version": "Versão do Hyprland",
+  "Font substitution": "Substituição de fonte",
+  "Avatar folder": "Pasta de avatar",
+  "Bundled icons": "Ícones incluídos"
 }

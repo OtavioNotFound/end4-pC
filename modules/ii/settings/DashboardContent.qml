@@ -106,6 +106,7 @@ Item {
         }
         if (event.key === Qt.Key_Escape) {
             if (currentPage === presetsPage && presetsLoader.item?.selected) presetsLoader.item.back();
+            else if (currentPage === settingsPage && settingsLoader.item?.diagnosisOpen) settingsLoader.item.diagnosisOpen = false;
             else GlobalStates.settingsOpen = false;
         } else if (currentPage === mediaPage && event.key === Qt.Key_Left) {
             mediaState.player?.previous();

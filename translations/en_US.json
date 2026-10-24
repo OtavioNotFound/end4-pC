@@ -1393,5 +1393,13 @@
   "Auto transparency": "Auto transparency",
   "Bar background": "Bar background",
   "Window blur": "Window blur",
-  "Dock style": "Dock style"
+  "Dock style": "Dock style",
+  "Quickshell": "Quickshell",
+  "Hyprland command interface": "Hyprland command interface",
+  "Image decoder (ImageMagick)": "Image decoder (ImageMagick)",
+  "Quickshell version": "Quickshell version",
+  "Hyprland version": "Hyprland version",
+  "Font substitution": "Font substitution",
+  "Avatar folder": "Avatar folder",
+  "Bundled icons": "Bundled icons"
 }

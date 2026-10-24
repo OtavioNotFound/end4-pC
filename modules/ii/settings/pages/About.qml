@@ -18,6 +18,14 @@ ContentPage {
 
     function runUpdateDots() { DotsUpdater.runUpdateDots() }
 
+    RippleButtonWithIcon {
+        Layout.fillWidth: true
+        materialIcon: "fact_check"
+        mainText: Translation.tr("Check configuration")
+        Accessible.name: mainText
+        onClicked: { GlobalStates.settingsDiagnosticsOpen = true; SettingsDiagnostics.run(); }
+    }
+
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 156 

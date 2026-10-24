@@ -36,9 +36,11 @@ Singleton {
     property bool workspaceShowNumbers: false
     property var settingsTarget: null
     property bool settingsDetailedView: false
-    onSettingsOpenChanged: if (!settingsOpen) settingsDetailedView = false
+    property bool settingsDiagnosticsOpen: false
+    onSettingsOpenChanged: if (!settingsOpen) { settingsDetailedView = false; settingsDiagnosticsOpen = false; }
 
     function openSettingsAt(pageId, label, section, subsection) {
+        root.settingsDiagnosticsOpen = false;
         root.settingsDetailedView = Config.options.settings.style === "dashboard";
         root.settingsOpen = true;
         Qt.callLater(() => {

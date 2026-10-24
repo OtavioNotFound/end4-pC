@@ -31,6 +31,10 @@ Scope {
         visible: GlobalStates.settingsOpen && (Config.options.settings.style !== "dashboard" || GlobalStates.settingsDetailedView)
 
         function hide() {
+            if (GlobalStates.settingsDiagnosticsOpen) {
+                GlobalStates.settingsDiagnosticsOpen = false;
+                return;
+            }
             if (GlobalStates.settingsDetailedView && Config.options.settings.style === "dashboard") {
                 GlobalStates.settingsDetailedView = false;
                 return;
