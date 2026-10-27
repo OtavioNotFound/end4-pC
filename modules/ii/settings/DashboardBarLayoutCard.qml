@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -24,7 +25,29 @@ DashboardCard {
         { id: "right", title: vertical ? Translation.tr("Bottom") : Translation.tr("Right"), icon: vertical ? "align_vertical_bottom" : "align_horizontal_right", list: rightList }
     ]
 
-    readonly property var trayIds: widgets.all.filter(w => canExist(w.id)).map(w => w.id)
+    readonly property var trayIds: widgets.all.filter(w => !usedIds.includes(w.id) || widgets.multipleAllowed.includes(w.id)).map(w => w.id)
+    property var selection: null
+    readonly property var selectedInfo: selection ? widgets.byId(selection.id) : null
+    readonly property var selectedEntries: {
+        if (!selection) return [];
+        if (selection.id === "clockWidget") return settingsCatalog.sections.reduce((all, section) => all.concat(section.cards.filter(card => ["general:Format", "general:Show date"].includes(card.key))), []);
+        return settingsCatalog.sections.filter(section => section.requires === selection.id).reduce((all, section) => all.concat(section.cards.map(card => Object.assign({ requires: section.requires, when: section.when ?? "" }, card))), []);
+    }
+    DashboardSettingsCatalog { id: settingsCatalog }
+
+    function selectItem(id, lane, index) { selection = { id: id, lane: lane, index: index }; }
+    function actOnSelection(target, offset) {
+        const item = selection;
+        if (!item) return;
+        const position = target === "tray" ? 0 : target === item.lane ? item.index + offset : BarLayout.lists[target].length;
+        if (BarLayout.transfer(item.lane, item.index, target, position, item.id)) {
+            selection = target === "tray" ? null : { id: item.id, lane: target, index: position };
+        }
+    }
+    function openSelectedSettings() {
+        const section = settingsCatalog.sections.find(s => s.requires === selection?.id);
+        GlobalStates.openSettingsAt("bar", "", section?.title ?? Translation.tr("Bar layout"));
+    }
 
     property var drag: null
     property string hoverLane: ""
@@ -124,18 +147,6 @@ DashboardCard {
     onDragChanged: refreshLanes()
     Component.onCompleted: refreshLanes()
 
-    function canExist(id) {
-        if (id === "divisor" && barConfig.borderless !== "transparent") return false;
-        if (id === "dynamicIsland" && barConfig.vertical) return false;
-        return !usedIds.includes(id) || widgets.multipleAllowed.includes(id);
-    }
-
-    function canPlace(id, laneId) {
-        if (id === "dynamicIsland" && laneId !== "middle") return false;
-        if (laneId === "middle" && middleList.includes("dynamicIsland") && id !== "dynamicIsland") return false;
-        return true;
-    }
-
     function laneItem(laneId) {
         for (let i = 0; i < laneRepeater.count; i++) {
             const lane = laneRepeater.itemAt(i);
@@ -198,17 +209,19 @@ DashboardCard {
         hoverLane = "";
         if (!info || target === "") return;
 
-        const lists = { left: leftList.slice(), middle: middleList.slice(), right: rightList.slice() };
-        if (target !== "tray" && !canPlace(info.id, target)) return;
-        if (info.from !== "tray") lists[info.from].splice(info.fromIndex, 1);
-        if (target !== "tray") lists[target].splice(index, 0, info.id);
+        if (BarLayout.transfer(info.from, info.fromIndex, target, index, info.id))
+            selection = target === "tray" ? null : { id: info.id, lane: target, index: index };
+    }
 
-        Qt.callLater(() => {
-            const layouts = Config.options.bar.layouts;
-            if (JSON.stringify(lists.left) !== JSON.stringify(leftList)) layouts.leftLayout = lists.left;
-            if (JSON.stringify(lists.middle) !== JSON.stringify(middleList)) layouts.middleLayout = lists.middle;
-            if (JSON.stringify(lists.right) !== JSON.stringify(rightList)) layouts.rightLayout = lists.right;
-        });
+    Connections {
+        target: BarLayout
+        function onSignatureChanged() {
+            Qt.callLater(() => {
+                const item = root.selection;
+                if (item && item.lane !== "tray" && BarLayout.lists[item.lane]?.[item.index] !== item.id)
+                    root.selection = null;
+            });
+        }
     }
 
     property bool confirmClear: false
@@ -221,23 +234,20 @@ DashboardCard {
 
     function clearAll() {
         confirmClear = false;
-        Qt.callLater(() => {
-            const layouts = Config.options.bar.layouts;
-            layouts.leftLayout = [];
-            layouts.middleLayout = [];
-            layouts.rightLayout = [];
-        });
+        if (BarLayout.clear()) selection = null;
     }
 
     function removeWidget(laneId, index) {
-        const lists = { left: leftList.slice(), middle: middleList.slice(), right: rightList.slice() };
-        lists[laneId].splice(index, 1);
-        Qt.callLater(() => {
-            const layouts = Config.options.bar.layouts;
-            if (laneId === "left") layouts.leftLayout = lists.left;
-            else if (laneId === "middle") layouts.middleLayout = lists.middle;
-            else layouts.rightLayout = lists.right;
-        });
+        const id = BarLayout.lists[laneId]?.[index];
+        if (id !== undefined && BarLayout.transfer(laneId, index, "tray", 0, id)) selection = null;
+    }
+
+    component EditorButton: RippleButton {
+        objectName: "barAction"
+        Accessible.name: buttonText
+        activeFocusOnTab: true
+        horizontalPadding: 10
+        verticalPadding: 6
     }
 
     component Chip: Rectangle {
@@ -251,13 +261,20 @@ DashboardCard {
         readonly property bool beingDragged: card.drag !== null && card.drag.id === widgetId && card.drag.from === lane && card.drag.fromIndex === slot
 
         implicitHeight: 34
-        implicitWidth: isGap ? card.dragWidth : beingDragged ? 0 : chipRow.implicitWidth + 24
+        implicitWidth: isGap ? card.dragWidth : beingDragged ? 0 : Math.min(chipLabel.implicitWidth + 46, Math.max(90, card.width / 3 - 42))
         radius: height / 2
         color: isGap ? "transparent" : lane === "tray" ? Qt.rgba(1, 1, 1, 0.1) : Appearance.colors.colSecondaryContainer
-        border.width: isGap ? 2 : 0
         border.color: Appearance.colors.colPrimary
         opacity: beingDragged ? 0 : isGap ? 0.7 : 1
         clip: true
+        activeFocusOnTab: !isGap && lane !== "ghost"
+        Accessible.role: Accessible.Button
+        Accessible.name: info.name
+        Accessible.description: Translation.tr("Select to add, move or configure this item.")
+        border.width: activeFocus || (card.selection?.id === widgetId && card.selection?.lane === lane && card.selection?.index === slot) ? 2 : isGap ? 2 : 0
+        Keys.onReturnPressed: card.selectItem(widgetId, lane, slot)
+        Keys.onEnterPressed: card.selectItem(widgetId, lane, slot)
+        Keys.onSpacePressed: card.selectItem(widgetId, lane, slot)
 
         Behavior on implicitWidth {
             NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
@@ -266,6 +283,7 @@ DashboardCard {
         RowLayout {
             id: chipRow
             anchors.centerIn: parent
+            width: parent.width - 24
             spacing: 6
             visible: !chip.isGap
 
@@ -275,6 +293,9 @@ DashboardCard {
                 color: Appearance.colors.colOnSecondaryContainer
             }
             StyledText {
+                id: chipLabel
+                Layout.fillWidth: true
+                elide: Text.ElideRight
                 text: chip.info.name
                 font.pixelSize: Appearance.font.pixelSize.small
                 color: Appearance.colors.colOnSecondaryContainer
@@ -287,18 +308,28 @@ DashboardCard {
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
             preventStealing: true
+            property real startX: 0
+            property real startY: 0
             onPressed: mouse => {
                 if (mouse.button === Qt.RightButton) {
                     if (chip.lane !== "tray") card.removeWidget(chip.lane, chip.slot);
                     return;
                 }
-                card.beginDrag(chip.widgetId, chip.lane, chip.slot, chip.mapToItem(card, mouse.x, mouse.y), chip.width);
+                chip.forceActiveFocus();
+                startX = mouse.x; startY = mouse.y;
             }
             onPositionChanged: mouse => {
-                if (pressed && card.drag) card.moveDrag(chip.mapToItem(card, mouse.x, mouse.y));
+                if (!pressed) return;
+                if (!card.drag && Math.hypot(mouse.x - startX, mouse.y - startY) > 8)
+                    card.beginDrag(chip.widgetId, chip.lane, chip.slot, chip.mapToItem(card, mouse.x, mouse.y), chip.width);
+                else if (card.drag) card.moveDrag(chip.mapToItem(card, mouse.x, mouse.y));
             }
-            onReleased: card.finishDrag()
-            onCanceled: card.finishDrag()
+            onReleased: mouse => {
+                if (mouse.button !== Qt.LeftButton) return;
+                if (card.drag) card.finishDrag();
+                else card.selectItem(chip.widgetId, chip.lane, chip.slot);
+            }
+            onCanceled: { card.drag = null; card.hoverLane = ""; }
         }
     }
 
@@ -322,16 +353,21 @@ DashboardCard {
             }
 
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 0
 
                 StyledText {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
                     text: root.title
                     font.pixelSize: Appearance.font.pixelSize.larger
                     font.weight: Font.DemiBold
                     color: Appearance.colors.colOnLayer1
                 }
                 StyledText {
-                    text: Translation.tr("Drag widgets between zones · right-click to remove · drop on the tray to hide")
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: Translation.tr("Select an item to add, move or configure it. Dragging is optional.")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
                 }
@@ -348,7 +384,7 @@ DashboardCard {
                 colBackground: root.confirmClear ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
                 colBackgroundHover: root.confirmClear ? Appearance.colors.colPrimaryHover : Appearance.colors.colSecondaryContainerHover
                 colRipple: root.confirmClear ? Appearance.colors.colPrimaryActive : Appearance.colors.colSecondaryContainerActive
-                downAction: () => Qt.callLater(() => {
+                onClicked: Qt.callLater(() => {
                     if (root.confirmClear) root.clearAll();
                     else {
                         root.confirmClear = true;
@@ -470,6 +506,81 @@ DashboardCard {
                         color: Appearance.colors.colSubtext
                         opacity: 0.6
                     }
+                }
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 6
+            StyledText {
+                Layout.fillWidth: true
+                text: root.selection ? root.selectedInfo?.name ?? "" : Translation.tr("Select an item above or in the catalog below.")
+                font.weight: Font.DemiBold
+                wrapMode: Text.WordWrap
+            }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 4
+                visible: root.selection !== null
+                Repeater {
+                    model: root.lanes
+                    delegate: Column {
+                        required property var modelData
+                        readonly property string reason: root.selection ? BarLayout.reason(root.selection.id, modelData.id, root.selection.lane === "tray") : ""
+                        EditorButton {
+                            buttonText: (root.selection?.lane === "tray" ? Translation.tr("Add to") : Translation.tr("Move to")) + " " + modelData.title
+                            enabled: parent.reason === "" && root.selection?.lane !== modelData.id && !Config.blockWrites
+                            onClicked: root.actOnSelection(parent.modelData.id, 0)
+                            StyledToolTip { text: parent.parent.reason; extraVisibleCondition: parent.hovered || parent.activeFocus; maximumContentWidth: 320 }
+                        }
+                    }
+                }
+                EditorButton { buttonText: Translation.tr("Move earlier"); enabled: root.selection?.lane !== "tray" && (root.selection?.index ?? 0) > 0 && !Config.blockWrites; onClicked: root.actOnSelection(root.selection.lane, -1) }
+                EditorButton { buttonText: Translation.tr("Move later"); enabled: root.selection?.lane !== "tray" && (root.selection?.index ?? 0) < (BarLayout.lists[root.selection?.lane]?.length ?? 0) - 1 && !Config.blockWrites; onClicked: root.actOnSelection(root.selection.lane, 1) }
+                EditorButton { buttonText: Translation.tr("Remove from bar"); enabled: root.selection !== null && root.selection.lane !== "tray" && !Config.blockWrites; onClicked: root.actOnSelection("tray", 0) }
+                EditorButton { buttonText: Translation.tr("Open all options"); enabled: root.selection?.lane !== "tray"; onClicked: root.openSelectedSettings() }
+            }
+            StyledText {
+                Layout.fillWidth: true
+                visible: root.selection !== null
+                text: root.selection ? widgets.description(root.selection.id) : ""
+                textFormat: Text.PlainText
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+            }
+            StyledText {
+                Layout.fillWidth: true
+                visible: root.selection?.lane === "tray" && text !== ""
+                text: root.selection ? root.lanes.map(lane => BarLayout.reason(root.selection.id, lane.id, true)).filter((value, index, all) => value && all.indexOf(value) === index).join("\n") : ""
+                textFormat: Text.PlainText
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+            }
+            StyledText {
+                Layout.fillWidth: true
+                text: BarLayout.message
+                visible: text !== ""
+                wrapMode: Text.WordWrap
+                textFormat: Text.PlainText
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
+            EditorButton { buttonText: Translation.tr("Undo layout change"); enabled: BarLayout.canUndo; onClicked: { if (BarLayout.undo()) root.selection = null; } }
+            StyledFlickable {
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.selectedEntries.length && root.selection?.lane !== "tray" ? 180 : 0
+                visible: Layout.preferredHeight > 0
+                contentHeight: inlineControls.implicitHeight
+                clip: true
+                SettingsInlineControls {
+                    id: inlineControls
+                    width: parent.width
+                    entries: root.selectedEntries
+                    catalog: settingsCatalog
+                    onOpenFullSettings: root.openSelectedSettings()
                 }
             }
         }

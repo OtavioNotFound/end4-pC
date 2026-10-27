@@ -904,7 +904,7 @@ AbstractBackgroundWidget {
             currentWidth: root.widgetWidth
             resizeMode: "diagonal"
             onResizedXY: (dx, dy, startWidth) => { root.sizeMode = root.modeForDrag(dx, dy, startWidth) }
-            onResizeFinished: { root.configEntry.sizeMode = root.sizeMode }
+            onResizeFinished: { root.configEntry.sizeMode = root.sizeMode; root.sizeMode = Qt.binding(() => root.configEntry.sizeMode ?? "1x3"); }
         }
     }
 }

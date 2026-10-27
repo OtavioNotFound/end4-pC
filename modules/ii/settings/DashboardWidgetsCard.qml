@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -37,9 +38,12 @@ DashboardCard {
             }
 
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 0
 
                 StyledText {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
                     text: root.title
                     font.pixelSize: Appearance.font.pixelSize.larger
                     font.weight: Font.DemiBold
@@ -55,6 +59,7 @@ DashboardCard {
             Item { Layout.fillWidth: true }
 
             Rectangle {
+                visible: root.width > 700
                 implicitHeight: 32
                 implicitWidth: hint.implicitWidth + 28
                 radius: 16
@@ -112,11 +117,11 @@ DashboardCard {
                         colBackgroundHover: tile.on ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colLayer2Hover
                         colRipple: tile.on ? Appearance.colors.colPrimaryContainerActive : Appearance.colors.colLayer2Active
                         onClicked: {
-                            const key = tile.modelData.key;
-                            const next = !tile.on;
-                            Qt.callLater(() => DesktopWidgets.setEnabled(key, next));
+                            DesktopWidgets.select(tile.modelData.key);
+                            GlobalStates.openSettingsAt("widgets");
                         }
 
+                        Accessible.name: Translation.tr("Configure") + " · " + tile.modelData.name
                         contentItem: ColumnLayout {
                             spacing: 0
 
@@ -142,7 +147,7 @@ DashboardCard {
                                 color: tile.on ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer2
                             }
                             StyledText {
-                                text: tile.on ? Translation.tr("On desktop") : Translation.tr("Off")
+                                text: Translation.tr("Configure")
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: tile.on ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
                                 opacity: tile.on ? 0.75 : 1
@@ -150,11 +155,24 @@ DashboardCard {
                         }
                     }
 
+                    StyledSwitch {
+                        id: visibilitySwitch
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 6
+                        enabled: !Config.blockWrites
+                        Accessible.name: Translation.tr("Show on desktop") + " · " + tile.modelData.name
+                        Binding { target: visibilitySwitch; property: "checked"; value: tile.on }
+                        onClicked: DesktopWidgets.setEnabled(tile.modelData.key, !tile.on)
+                    }
                     RippleButton {
                         id: starButton
                         anchors.top: parent.top
                         anchors.right: parent.right
                         anchors.margins: 6
+                        enabled: !Config.blockWrites
+                        Accessible.name: Translation.tr("Show in desktop menu") + " · " + tile.modelData.name
+                        StyledToolTip { text: Translation.tr("Show in desktop menu"); extraVisibleCondition: starButton.hovered || starButton.activeFocus; maximumContentWidth: 320 }
                         implicitWidth: 30
                         implicitHeight: 30
                         buttonRadius: 15

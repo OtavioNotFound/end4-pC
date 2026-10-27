@@ -21,7 +21,7 @@ class Runtime:
         for source in (ROOT / 'services').glob('*.qml'):
             self.stub(source.stem, '')
         for name in ('SettingsHelp.qml', 'SettingsQuickControls.qml', 'SettingsSearchIndex.qml', 'SettingsPages.qml',
-                     'SettingsDiagnostics.qml', 'SettingsMetadata.js', 'SettingsSearch.js', 'Fonts.qml'):
+                     'SettingsDiagnostics.qml', 'BarLayout.qml', 'BarLayout.js', 'TaskbarApps.qml', 'SettingsMetadata.js', 'SettingsSearch.js', 'Fonts.qml'):
             shutil.copy2(ROOT / 'services' / name, services / name)
         self.config = self.root / 'config.json'
         self.config.write_text(json.dumps({'settings': {'style': 'dashboard'}, 'appearance': {'transparency': {'enable': True, 'automatic': True}}}))
@@ -69,10 +69,8 @@ property int cursorSize: 24
 function toOptions(values) { return values.map(value => ({value:value,displayName:value})); }
 function fontOptions() { return []; }
 function iconPath() { return ""; }''')
-        self.stub('DesktopWidgets', '''property var catalog: []
-property int enabledCount: 0
-function isEnabled() { return false; }
-function isStarred() { return false; }''')
+        shutil.copy2(ROOT / 'services/DesktopWidgets.qml', services / 'DesktopWidgets.qml')
+        self.stub('MprisController', 'property var activePlayer: null')
         self.stub('Cliphist', 'property bool availabilityKnown: true\nproperty bool available: false')
         self.stub('Weather', 'property bool gpsActive: false\nproperty var location: ({})\nproperty var data: ({})')
         self.stub('SystemInfo', 'property string username: "fixture"\nproperty string distroName: "Fixture OS"')
@@ -112,7 +110,7 @@ property Item currentPageInstance: null
     def stub(self, name, body):
         (self.root / 'services' / f'{name}.qml').write_text('pragma Singleton\nimport QtQuick\nimport Quickshell\nSingleton {\nid: root\n' + body + '\n}\n')
 
-    def run(self, body, timeout=15):
+    def run(self, body, timeout=15, imports=""):
         shell = '''import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -124,7 +122,7 @@ import qs.modules.ii.settings
 import qs.services
 ShellRoot {
 ''' + body + '\n}\n'
-        (self.root / 'shell.qml').write_text(shell)
+        (self.root / 'shell.qml').write_text(imports + '\n' + shell)
         return subprocess.run(['qs', '-p', str(self.root), '--no-color'], env=self.env, capture_output=True, text=True, timeout=timeout)
 
     def close(self):

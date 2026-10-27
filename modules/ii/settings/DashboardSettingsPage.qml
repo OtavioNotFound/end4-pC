@@ -89,9 +89,12 @@ Item {
         if (type === "batterystyle") return [4, 2];
         if (type === "collagelayouts") return [4, 2];
         if (type === "timepreview") return [3, 2];
-        if (type === "widgets") return [4, 3];
+        if (type === "widgets") {
+            const columns = Math.max(2, Math.min(7, Math.floor((root.width - 130) / 170)));
+            return [4, Math.max(3, Math.ceil((Math.ceil(DesktopWidgets.catalog.length / columns) * 106 + 120) / (rowHeight + gap)))];
+        }
         if (type === "shape") return [2, 2];
-        if (type === "barlayout") return [4, 3];
+        if (type === "barlayout") return [4, 6];
         if (type === "palette") return [4, 1];
         if (type === "iconpicker") return [2, 2];
         if (type === "toggle" || type === "spin") return [1, 1];
@@ -99,6 +102,9 @@ Item {
     }
 
     readonly property var heroEntries: [
+        { id: "hero:widgets", type: "action", title: Translation.tr("Configure desktop widgets"), description: Translation.tr("Choose a widget, its settings and where it appears."), icon: "widgets", section: Translation.tr("Desktop"), actionId: "widgets", kw: "widgets configurar relógio clima recursos texto" },
+        { id: "hero:dock", type: "action", title: Translation.tr("Configure your dock"), description: Translation.tr("Choose applications, behavior and monitors."), icon: "dock_to_bottom", section: Translation.tr("Bar"), actionId: "dock", kw: "dock apps icons aplicativos fixar monitores" },
+        { id: "hero:bar", type: "action", title: Translation.tr("Build your bar"), description: Translation.tr("Add items, change their order and configure them in place."), icon: "view_week", section: Translation.tr("Bar"), actionId: "bar", kw: "bar widgets layout configurar barra itens ordem" },
         { id: "hero:quick", type: "action", title: Translation.tr("Light, dark and colors"), description: Translation.tr("Open the existing appearance controls."), icon: "contrast", section: Translation.tr("Interface"), actionId: "quick", kw: "dark light mode theme claro escuro aparência tema" },
         { id: "hero:displays", type: "action", title: Translation.tr("Displays"), description: Translation.tr("Resolution, scale and monitor arrangement."), icon: "monitor", section: WM.compositor === "niri" ? Translation.tr("Niri") : Translation.tr("Hyprland"), actionId: "displays", kw: "monitor display resolution scale tela resolução escala" },
         { id: "hero:all", type: "action", title: Translation.tr("All settings"), description: Translation.tr("Includes fonts, services and advanced options."), icon: "settings", section: Translation.tr("General"), actionId: "all", kw: "advanced fonts ai autostart avançado fontes serviços" },
@@ -441,7 +447,11 @@ Item {
     }
 
     function activateAction(action) {
-        if (action === "diagnostics") {
+        if (action === "bar") {
+            GlobalStates.openSettingsAt("bar");
+        } else if (["dock", "widgets"].includes(action)) {
+            GlobalStates.openSettingsAt(action);
+        } else if (action === "diagnostics") {
             root.diagnosisOpen = true;
             SettingsDiagnostics.run();
         } else if (action === "displays") {

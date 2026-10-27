@@ -4,65 +4,17 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import Quickshell.Hyprland
+import ".."
 
 ContentPage {
     id: page
     readonly property bool defaultWorkspacesDesign: (Config.options.bar.workspaces.style ?? "default") === "default"
     forceWidth: true
+    DashboardSettingsCatalog { id: catalog }
 
     readonly property color leftIconColor: {
         const name = Config.options.custom.iconColor || "onLayer0"
         return Appearance.colors[`col${name.charAt(0).toUpperCase()}${name.slice(1)}`] ?? Appearance.colors.colOnLayer0
-    }
-
-    property var allWidgets: [
-        { id: "leftSidebarButton", name: Translation.tr("Left Sidebar Button"),  icon: "left_panel_open" },
-        { id: "workspaces",        name: Translation.tr("Workspaces"),           icon: "steppers" },
-        { id: "weatherBar",        name: Translation.tr("Weather"),              icon: "flare" },
-        { id: "liveWallpaper",     name: Translation.tr("Live wallpaper"),        icon: "play_pause" },
-        { id: "media",             name: Translation.tr("Media"),                icon: "music_note" },
-        { id: "resources",         name: Translation.tr("Resources"),            icon: "empty_dashboard" },
-        { id: "systemIcons",       name: Translation.tr("System Icons"),         icon: "info" },
-        { id: "networkSpeed",      name: Translation.tr("Network Speed"),        icon: "network_check" },
-        { id: "clockWidget",       name: Translation.tr("Clock"),                icon: "schedule" },
-        { id: "utilButtons",       name: Translation.tr("Util Buttons"),         icon: "toggle_on" },
-        { id: "sysTray",           name: Translation.tr("Tray"),                 icon: "inbox" },
-        { id: "batteryIndicator",  name: Translation.tr("Battery"),              icon: "battery_android_frame_full" },
-        { id: "bluetooth",         name: Translation.tr("Bluetooth"),            icon: "bluetooth" },
-        { id: "activeWindow",      name: Translation.tr("Active Window"),        icon: "subtitles" },
-        { id: "powerButton",       name: Translation.tr("Power Button"),         icon: "power_settings_new" },
-        { id: "updatesCount",      name: Translation.tr("Updates"),              icon: "deployed_code_update" },
-        { id: "docktoPanel",       name: Translation.tr("Dock to Panel"),        icon: "apps" },
-        { id: "visualizer",        name: Translation.tr("Visualizer"),           icon: "graphic_eq" },
-        { id: "hyprlandXkbIndicator",   name: Translation.tr("Keyboard Layout"), icon: "keyboard" },
-        { id: "divisor",            name: Translation.tr("Divider"),             icon: "horizontal_distribute" },
-        { id: "launcherButton",     name: Translation.tr("Launcher Button"),     icon: "search" },
-        { id: "dynamicIsland",     name: Translation.tr("Dynamic Island"),     icon: "nest_wifi_pro" },
-        { id: "aiUsage",           name: Translation.tr("AI Usage"),           icon: "neurology" },
-        { id: "avatar",            name: Translation.tr("Avatar"),             icon: "account_circle" },
-    ]
-
-    function availableFor(section) {
-        let used = [
-            ...Config.options.bar.layouts.leftLayout,
-            ...Config.options.bar.layouts.middleLayout,
-            ...Config.options.bar.layouts.rightLayout
-        ]
-        if (section === "middle" && Config.options.bar.layouts.middleLayout.length > 0) {
-            return Config.options.bar.layouts.middleLayout.includes("dynamicIsland") ? [] : allWidgets.filter(w => {
-                if (w.id === "dynamicIsland") return false
-                if (w.id === "divisor" && Config.options.bar.borderless !== "transparent") return false
-                const multipleAllowed = ["visualizer", "divisor"]
-                return !used.includes(w.id) || multipleAllowed.includes(w.id)
-            })
-        }
-        const multipleAllowed = ["visualizer", "divisor"]
-        return allWidgets.filter(w => {
-            if (w.id === "divisor" && Config.options.bar.borderless !== "transparent") return false
-            if (w.id === "dynamicIsland" && (Config.options.bar.vertical || section !== "middle")) return false
-            return !used.includes(w.id) || multipleAllowed.includes(w.id)
-        })
     }
 
     readonly property var usedWidgets: {
@@ -78,27 +30,6 @@ ContentPage {
         return page.usedWidgets.includes(id)
     }
 
-    readonly property var widgetSections: ({
-        dynamicIsland: Translation.tr("Dynamic Island"),
-        sysTray: Translation.tr("Tray"),
-        leftSidebarButton: Translation.tr("Left sidebar button"),
-        divisor: Translation.tr("Divider"),
-        utilButtons: Translation.tr("Utility buttons"),
-        workspaces: Translation.tr("Workspaces"),
-        resources: Translation.tr("Resources"),
-        media: Translation.tr("Media")
-    })
-
-    function openWidgetSettings(id) {
-        const title = page.widgetSections[id]
-        if (title) page.goTo(title, title)
-    }
-
-    function getWidgetName(id) {
-        const w = allWidgets.find(w => w.id === id)
-        return w ? w.name : id
-    }
-
     ColumnLayout {
         id: mainLayout 
         Layout.fillWidth: true   
@@ -107,124 +38,18 @@ ContentPage {
 
         ContentSection {
             icon: "monitor"
-            shape: MaterialShape.Shape.ClamShell
-            visible: Hyprland.monitors.values.length > 1
             title: Translation.tr("Screens")
-            ContentSubsection {
-                title: Translation.tr("Show bar on")
-
-                ColumnLayout {
-                    id: monitorsCol
-                    Layout.fillWidth: true
-                    spacing: 2
-
-                    Rectangle {
-                        id: allRow
-                        Layout.fillWidth: true
-                        implicitHeight: allSwitchItem.implicitHeight + 16 + 8
-                        color: Appearance.colors.colLayer1
-                        topLeftRadius: Appearance.rounding.normal
-                        topRightRadius: Appearance.rounding.normal
-                        bottomLeftRadius: Appearance.rounding.unsharpenmore
-                        bottomRightRadius: Appearance.rounding.unsharpenmore
-
-                        ConfigSwitch {
-                            id: allSwitchItem
-                            anchors { fill: parent; margins: 8 }
-                            buttonIcon: "tv_displays"
-                            text: Translation.tr("All")
-                            onCheckedChanged: {
-                                if (checked) Config.options.bar.screenList = []
-                            }
-
-                            Binding {
-                                target: allSwitchItem
-                                property: "checked"
-                                value: Config.options.bar.screenList.length === 0
-                                restoreMode: Binding.RestoreBinding
-                            }
-                        }
-                    }
-
-                    Repeater {
-                        model: Hyprland.monitors
-                        delegate: Rectangle {
-                            id: monitorRow
-                            required property var modelData
-                            required property int index
-                            readonly property bool isLast: index === Hyprland.monitors.values.length - 1
-
-                            Layout.fillWidth: true
-                            implicitHeight: switchItem.implicitHeight + 16 + 8
-                            color: Appearance.colors.colLayer1
-                            topLeftRadius:     Appearance.rounding.unsharpenmore
-                            topRightRadius:    Appearance.rounding.unsharpenmore
-                            bottomLeftRadius:  isLast ? Appearance.rounding.normal : Appearance.rounding.unsharpenmore
-                            bottomRightRadius: isLast ? Appearance.rounding.normal : Appearance.rounding.unsharpenmore
-
-                            ConfigSwitch {
-                                id: switchItem
-                                anchors { fill: parent; margins: 8 }
-                                buttonIcon: "monitor"
-                                text: monitorRow.modelData.name
-                                onCheckedChanged: {
-                                    const allNames = Hyprland.monitors.values.map(m => m.name)
-                                    let list = Config.options.bar.screenList.length === 0 ? allNames.slice() : Config.options.bar.screenList.slice()
-                                    if (checked) {
-                                        if (!list.includes(monitorRow.modelData.name)) list.push(monitorRow.modelData.name)
-                                    } else {
-                                        list = list.filter(s => s !== monitorRow.modelData.name)
-                                    }
-                                    Config.options.bar.screenList = list.length === allNames.length ? [] : list
-                                }
-
-                                Binding {
-                                    target: switchItem
-                                    property: "checked"
-                                    value: Config.options.bar.screenList.length === 0 || Config.options.bar.screenList.includes(monitorRow.modelData.name)
-                                    restoreMode: Binding.RestoreBinding
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            SettingsScreenSelection { Layout.fillWidth: true; configPath: "bar.screenList" }
         }
 
         ContentSection {
             icon: "splitscreen_add"
             shape: MaterialShape.Shape.Cookie6Sided
             title: Translation.tr("Bar layout")
-            hint: Translation.tr("Right-click a widget to open its settings (not every widget has settings here)")
-            hintIcon: "info"
-
-            GroupedList {
-                LayoutSection {
-                    sectionTitle: Config.options.bar.vertical ? Translation.tr("Top") : Translation.tr("Left")
-                    layout: Config.options.bar.layouts.leftLayout
-                    availableWidgets: page.availableFor("left")
-                    getWidgetName: page.getWidgetName
-                    onUpdate: list => Config.options.bar.layouts.leftLayout = list
-                    onWidgetContextRequested: id => page.openWidgetSettings(id)
-                }
-
-                LayoutSection {
-                    sectionTitle: Translation.tr("Center")
-                    layout: Config.options.bar.layouts.middleLayout
-                    availableWidgets: page.availableFor("middle")
-                    getWidgetName: page.getWidgetName
-                    onUpdate: list => Config.options.bar.layouts.middleLayout = list
-                    onWidgetContextRequested: id => page.openWidgetSettings(id)
-                }
-
-                LayoutSection {
-                    sectionTitle: Config.options.bar.vertical ? Translation.tr("Bottom") : Translation.tr("Right")
-                    layout: Config.options.bar.layouts.rightLayout
-                    availableWidgets: page.availableFor("right")
-                    getWidgetName: page.getWidgetName
-                    onUpdate: list => Config.options.bar.layouts.rightLayout = list
-                    onWidgetContextRequested: id => page.openWidgetSettings(id)
-                }
+            DashboardBarLayoutCard {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1100
+                title: Translation.tr("Bar layout")
             }
         }
 
@@ -356,6 +181,16 @@ ContentPage {
                         Config.options.bar.frameColor = newValue
                     }
                 }
+            }
+        }
+
+        ContentSection {
+            icon: "visibility"
+            title: Translation.tr("Bar visibility")
+            SettingsInlineControls {
+                Layout.fillWidth: true
+                catalog: catalog
+                entries: catalog.sections.filter(section => section.cards.some(card => card.key === "bar:Reveal area width")).reduce((all, section) => all.concat(section.cards), [])
             }
         }
 

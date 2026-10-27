@@ -203,6 +203,14 @@ QtObject {
             ]
         },
         {
+            page: Translation.tr("Bar"), title: Translation.tr("Bar visibility"), icon: "visibility", cards: [
+                { type: "spin", key: "bar:Reveal area width", title: Translation.tr("Reveal area width"), icon: "width", when: "barautohide" },
+                { type: "toggle", key: "bar:Push windows when revealed", title: Translation.tr("Push windows when revealed"), icon: "layers", when: "barautohide" },
+                { type: "toggle", key: "bar:Reveal with Super", title: Translation.tr("Reveal with Super"), icon: "keyboard", when: "barautohide" },
+                { type: "spin", key: "bar:Super reveal delay", title: Translation.tr("Super reveal delay"), icon: "timer", when: "barsuper" }
+            ]
+        },
+        {
             page: Translation.tr("Bar"), title: Translation.tr("Dynamic Island"), icon: "nest_wifi_pro", requires: "dynamicIsland", cards: [
                 { type: "select", key: "bar:Left widget", title: Translation.tr("Left widget"), icon: "right_panel_open" },
                 { type: "select", key: "bar:Right widget", title: Translation.tr("Right widget"), icon: "left_panel_open" },
@@ -533,6 +541,19 @@ QtObject {
                 { type: "slider", key: "desktop:Text size", title: Translation.tr("Font size"), icon: "format_size", percent: false },
                 { type: "select", key: "desktop:Text alignment", title: Translation.tr("Alignment"), icon: "format_align_center" },
                 { type: "swatch", key: "desktop:Text color", title: Translation.tr("Color"), icon: "palette", w: 2 }
+            ]
+        },
+        {
+            page: Translation.tr("Desktop"), title: Translation.tr("Resource widget"), icon: "monitor_heart", cards: [
+                { type: "toggle", key: "desktop:Resources vertical", title: Translation.tr("Vertical layout"), icon: "view_column" },
+                { type: "toggle", key: "desktop:Resources CPU", title: Translation.tr("Show CPU"), icon: "memory" },
+                { type: "toggle", key: "desktop:Resources memory", title: Translation.tr("Show memory"), icon: "memory" },
+                { type: "select", key: "desktop:Resources third metric", title: Translation.tr("Third measurement"), icon: "monitoring" }
+            ]
+        },
+        {
+            page: Translation.tr("Desktop"), title: Translation.tr("Media widget"), icon: "music_note", cards: [
+                { type: "select", key: "desktop:Media layout", title: Translation.tr("Layout size"), icon: "grid_view" }
             ]
         },
         {

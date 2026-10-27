@@ -47,7 +47,7 @@ Scope {
     }
 
     Variants {
-        model: !root.ready ? [] : Quickshell.screens.map(screen => ({
+        model: !root.ready ? [] : Quickshell.screens.filter(screen => !Config.options.dock.screenList.length || Config.options.dock.screenList.includes(screen.name)).map(screen => ({
             screen: screen,
             position: DockStyle.position,
             layout: `${DockStyle.position}|${Config.options.dock.style}|${Config.options.dock.height}|${root.barState}`

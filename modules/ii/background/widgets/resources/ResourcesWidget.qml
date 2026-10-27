@@ -80,7 +80,7 @@ AbstractBackgroundWidget {
     Grid {
         id: row
         columns: root.isVertical ? 1 : 3
-        rows: root.isVertical ? 3 : 1
+        rows: -1
         spacing: root.cardSpacing
 
         Behavior on columns {
@@ -88,12 +88,14 @@ AbstractBackgroundWidget {
         }
 
         StatCard {
+            visible: root.configEntry.showCpu ?? true
             icon: "planner_review"
             value: Math.round(ResourceUsage.cpuUsage * 100) + "%"
             label: "CPU"
             shape: MaterialShape.Shape.Gem
         }
         StatCard {
+            visible: root.configEntry.showMemory ?? true
             icon: "memory"
             value: Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
             label: "RAM"
@@ -102,11 +104,13 @@ AbstractBackgroundWidget {
             shapeColor: Appearance.colors.colSecondary
         }
         StatCard {
-            icon: root.hasBattery ? "battery_full" : "storage"
-            value: root.hasBattery
+            readonly property bool useBattery: root.configEntry.thirdMetric === "battery" || ((root.configEntry.thirdMetric ?? "auto") === "auto" && root.hasBattery)
+            visible: root.configEntry.thirdMetric !== "none"
+            icon: useBattery ? "battery_full" : "storage"
+            value: useBattery && !root.hasBattery ? "—" : useBattery
                 ? Math.round(Battery.percentage * 100) + "%"
                 : Math.round(ResourceUsage.diskUsedPercentage * 100) + "%"
-            label: root.hasBattery ? "Battery" : "Disk"
+            label: Translation.tr(useBattery ? "Battery" : "Disk")
             shape: MaterialShape.Shape.Cookie12Sided
             bgColor: Appearance.colors.colTertiaryContainer
             shapeColor: Appearance.colors.colTertiary
@@ -119,6 +123,7 @@ AbstractBackgroundWidget {
         onClicked: {
             root.isVertical = !root.isVertical
             root.configEntry.vertical = root.isVertical
+            root.isVertical = Qt.binding(() => root.configEntry.vertical ?? false)
         }
     }
 }

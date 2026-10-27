@@ -14,6 +14,8 @@ Singleton {
             { id: "quick",     name: Translation.tr("Quick"),     icon: "instant_mix",    file: "QuickConfig.qml" },
             { id: "general",   name: Translation.tr("General"),   icon: "browse",         file: "GeneralConfig.qml" },
             { id: "bar",       name: Translation.tr("Bar"),       icon: "toast",          iconRotation: 180, file: "BarConfig.qml" },
+            { id: "dock", name: Translation.tr("Dock"), icon: "dock_to_bottom", file: "DockConfig.qml" },
+            { id: "widgets", name: Translation.tr("Widgets"), icon: "widgets", file: "WidgetsConfig.qml" },
             { id: "desktop",   name: Translation.tr("Desktop"),   icon: "texture",        file: "BackgroundConfig.qml" },
             { id: "interface", name: Translation.tr("Interface"), icon: "bottom_app_bar", file: "InterfaceConfig.qml" },
             { id: "services",  name: Translation.tr("Services"),  icon: "settings",       file: "ServicesConfig.qml" },

@@ -18,6 +18,9 @@ QML_FILES = [
     'services/Wallpapers.qml', 'services/Weather.qml',
 ]
 QML_FILES += [
+    'services/BarLayout.qml', 'services/DesktopWidgets.qml', 'services/TaskbarApps.qml',
+    'modules/ii/dock/Dock.qml', 'modules/ii/background/widgets/resources/ResourcesWidget.qml',
+    'modules/ii/background/widgets/media/MediaWidget.qml',
     'GlobalStates.qml', 'services/SettingsHelp.qml', 'services/SettingsDiagnostics.qml',
     'services/SettingsQuickControls.qml', 'services/SettingsSearchIndex.qml',
     'services/LauncherSearch.qml', 'services/HyprlandOptions.qml', 'services/FirstRunExperience.qml',

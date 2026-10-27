@@ -16,8 +16,26 @@ class SettingsRuntimeTests(unittest.TestCase):
     def assert_pass(self, result):
         output = result.stdout + result.stderr
         self.assertIn('UX_TEST_PASS', output, output)
-        for error in ('TypeError', 'ReferenceError', 'Unable to assign', 'Cannot assign', 'Binding loop', 'UX_TEST_FAIL'):
+        for error in ('TypeError', 'ReferenceError', 'Unable to assign', 'Cannot assign', 'Binding loop', 'UX_TEST_FAIL', 'Failed to load configuration', 'is not installed'):
             self.assertNotIn(error, output, output)
+
+    def test_real_first_run_service_loads_without_launching_welcome(self):
+        shutil.copy2(ROOT / 'services/FirstRunExperience.qml', self.runtime.root / 'services/FirstRunExperience.qml')
+        marker = self.runtime.root / 'state/user/first_run.txt'
+        marker.parent.mkdir(parents=True)
+        marker.write_text('Existing user fixture')
+        result = self.runtime.run('''
+    Component.onCompleted: FirstRunExperience.load()
+    Timer {
+        running: true; interval: 400
+        onTriggered: {
+            if (FirstRunExperience.welcomePending) { console.error("UX_TEST_FAIL unexpected welcome"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit()
+        }
+    }
+''')
+        self.assert_pass(result)
+        self.assertEqual(marker.read_text(), 'Existing user fixture')
 
     def test_dashboard_search_and_navigation_preserve_config(self):
         result = self.runtime.run('''
@@ -236,4 +254,295 @@ class SettingsRuntimeTests(unittest.TestCase):
         }
     }
 ''')
+        self.assert_pass(result)
+
+
+    def test_bar_editor_moves_configures_and_undoes_without_dragging(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 1100; height: 1000
+        DashboardBarLayoutCard { id: editor; anchors.fill: parent; title: "Bar" }
+    }
+    property int phase: 0
+    Timer { running: Config.ready; interval: 200; repeat: true
+        onTriggered: {
+            if (phase === 0) {
+                editor.selectItem("workspaces", "left", 1);
+                if (!editor.selectedEntries.length) { console.error("UX_TEST_FAIL no inline options"); Qt.quit(); return }
+                editor.actOnSelection("right", 0);
+                if (!BarLayout.lists.right.includes("workspaces") || !BarLayout.canUndo) { console.error("UX_TEST_FAIL move"); Qt.quit(); return }
+                phase = 1; return;
+            }
+            if (phase === 1) {
+                const control = SettingsQuickControls.controls["bar:Workspaces shown"];
+                control.set(6);
+                if (Config.options.bar.workspaces.shown !== 6) { console.error("UX_TEST_FAIL configure"); Qt.quit(); return }
+                BarLayout.undo();
+                if (BarLayout.lists.left[1] !== "workspaces" || Config.options.bar.workspaces.shown !== 6) { console.error("UX_TEST_FAIL scoped undo"); Qt.quit(); return }
+                editor.selectItem("media", "tray", 0); editor.actOnSelection("right", 0);
+                Config.options.bar.layouts.leftLayout = ["unknown-future-item"];
+                if (BarLayout.undo() || !BarLayout.lists.left.includes("unknown-future-item")) { console.error("UX_TEST_FAIL external conflict"); Qt.quit(); return }
+                console.log("UX_TEST_PASS"); Qt.quit();
+            }
+        }
+    }
+''')
+        self.assert_pass(result)
+
+    def test_bar_editor_explains_unavailable_items_and_blocks_preset_writes(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 900; height: 1100
+        DashboardBarLayoutCard { id: editor; anchors.fill: parent }
+    }
+    Timer { running: Config.ready; interval: 250
+        onTriggered: {
+            Config.options.bar.vertical = true;
+            editor.selectItem("dynamicIsland", "tray", 0);
+            if (!editor.trayIds.includes("dynamicIsland") || !BarLayout.reason("dynamicIsland", "middle", true)) { console.error("UX_TEST_FAIL restriction"); Qt.quit(); return }
+            const before = BarLayout.signature;
+            editor.actOnSelection("middle", 0);
+            if (before !== BarLayout.signature) { console.error("UX_TEST_FAIL incompatible edit"); Qt.quit(); return }
+            Config.blockWrites = true;
+            if (BarLayout.clear() || before !== BarLayout.signature) { console.error("UX_TEST_FAIL preset lock"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''')
+        self.assert_pass(result)
+
+
+    def test_dock_page_and_pinned_apps_keep_unknown_entries(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 1000; height: 720
+        Loader { id: dockPage; anchors.fill: parent; source: "modules/ii/settings/pages/DockConfig.qml" }
+    }
+    Timer { running: Config.ready; interval: 300
+        onTriggered: {
+            if (!dockPage.item) { console.error("UX_TEST_FAIL dock page"); Qt.quit(); return }
+            Config.options.dock.pinnedApps = ["unknown-future-app", "kitty"];
+            if (!TaskbarApps.movePinned("kitty", -1) || Config.options.dock.pinnedApps[1] !== "unknown-future-app") { console.error("UX_TEST_FAIL reorder"); Qt.quit(); return }
+            TaskbarApps.togglePin("kitty");
+            if (Config.options.dock.pinnedApps.length !== 1 || Config.options.dock.pinnedApps[0] !== "unknown-future-app") { console.error("UX_TEST_FAIL unpin"); Qt.quit(); return }
+            Config.blockWrites = true;
+            TaskbarApps.togglePin("blocked");
+            if (Config.options.dock.pinnedApps.length !== 1) { console.error("UX_TEST_FAIL preset lock"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''')
+        self.assert_pass(result)
+        self.assertNotIn('Error loading', result.stdout + result.stderr)
+
+    def test_monitor_selection_preserves_disconnected_names_and_never_selects_none(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 800; height: 500
+        SettingsScreenSelection { id: selector; anchors.fill: parent; configPath: "dock.screenList"; screenNames: ["DP-1", "HDMI-A-1"] }
+    }
+    Timer { running: Config.ready; interval: 250
+        onTriggered: {
+            if (selector.selected.length) { console.error("UX_TEST_FAIL old preset default"); Qt.quit(); return }
+            selector.setScreen("DP-1", false);
+            if (JSON.stringify(selector.selected) !== '["HDMI-A-1"]') { console.error("UX_TEST_FAIL select"); Qt.quit(); return }
+            selector.setScreen("HDMI-A-1", false);
+            if (selector.selected.length !== 1 || !selector.message) { console.error("UX_TEST_FAIL none"); Qt.quit(); return }
+            Config.options.dock.screenList = ["disconnected"];
+            if (!selector.names.includes("disconnected")) { console.error("UX_TEST_FAIL lost disconnected"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''')
+        self.assert_pass(result)
+
+    def test_widget_page_keeps_content_and_recovers_only_position(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 900; height: 700
+        Loader { id: page; anchors.fill: parent; source: "modules/ii/settings/pages/WidgetsConfig.qml" }
+    }
+    property int phase: 0
+    Timer { running: Config.ready; interval: 200; repeat: true
+        onTriggered: {
+            if (!page.item) { console.error("UX_TEST_FAIL page load"); Qt.quit(); return }
+            const key = ["clock", "weather", "resources", "media", "customText"][phase];
+            if (key) {
+                DesktopWidgets.select(key);
+                if (!page.item.entries.length) { console.error("UX_TEST_FAIL missing widget controls " + key); Qt.quit(); return }
+                phase++; return;
+            }
+            const entry = Config.options.background.widgets.customText;
+            entry.content = "Personal fixture text"; entry.x = 9999; entry.y = -100; entry.placementStrategy = "free";
+            DesktopWidgets.setEnabled("customText", true);
+            DesktopWidgets.setStarred("customText", false);
+            if (!entry.enable || DesktopWidgets.isStarred("customText")) { console.error("UX_TEST_FAIL state"); Qt.quit(); return }
+            DesktopWidgets.recoverPosition("customText");
+            if (entry.x !== 24 || entry.content !== "Personal fixture text" || !DesktopWidgets.canUndoPosition) { console.error("UX_TEST_FAIL recovery"); Qt.quit(); return }
+            DesktopWidgets.undoPosition();
+            if (entry.x !== 9999 || entry.content !== "Personal fixture text") { console.error("UX_TEST_FAIL position undo"); Qt.quit(); return }
+            DesktopWidgets.recoverPosition("customText"); entry.x = 200;
+            if (DesktopWidgets.undoPosition()) { console.error("UX_TEST_FAIL external conflict"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''')
+        self.assert_pass(result)
+
+
+    def test_native_bar_buttons_have_labels_and_control_the_actual_editor(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 900; height: 1100
+        DashboardBarLayoutCard { id: editor; anchors.fill: parent }
+    }
+    function find(item, predicate) {
+        if (predicate(item)) return item;
+        for (const child of item.children ?? []) { const match = find(child, predicate); if (match) return match; }
+        return null;
+    }
+    property int phase: 0
+    Timer { running: Config.ready; interval: 250; repeat: true
+        onTriggered: {
+            if (phase === 0) { editor.selectItem("workspaces", "left", 1); phase++; return }
+            if (phase === 1) {
+                const button = find(editor, item => item.buttonText === "Move to Right");
+                if (!button || button.width < 50 || button.height < 20 || !button.enabled) { console.error("UX_TEST_FAIL invisible movement button"); Qt.quit(); return }
+                button.click(); phase++; return;
+            }
+            if (phase === 2) {
+                if (!BarLayout.lists.right.includes("workspaces")) { console.error("UX_TEST_FAIL actual click"); Qt.quit(); return }
+                const spin = find(editor, item => item.text === "Workspaces shown" && typeof item.valueModified === "function");
+                if (!spin) { console.error("UX_TEST_FAIL inline spin"); Qt.quit(); return }
+                spin.value = 7; spin.valueModified();
+                if (Config.options.bar.workspaces.shown !== 7) { console.error("UX_TEST_FAIL actual spin"); Qt.quit(); return }
+                editor.selectItem("resources", "tray", 0); editor.actOnSelection("right", 0); phase++; return;
+            }
+            const toggle = find(editor, item => item.text === "CPU" && typeof item.click === "function");
+            if (!toggle) { console.error("UX_TEST_FAIL inline switch"); Qt.quit(); return }
+            toggle.click();
+            if (Config.options.bar.resources.alwaysShowCpu) { console.error("UX_TEST_FAIL switch off"); Qt.quit(); return }
+            toggle.click();
+            if (!Config.options.bar.resources.alwaysShowCpu) { console.error("UX_TEST_FAIL switch on"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''')
+        self.assert_pass(result)
+
+
+    def test_resource_widget_renders_new_choices_with_original_defaults(self):
+        self.runtime.stub('ResourceUsage', 'property int consumers: 0\nproperty real cpuUsage: 0.25\nproperty real memoryUsedPercentage: 0.5\nproperty real diskUsedPercentage: 0.4')
+        self.runtime.stub('Battery', 'property bool available: false\nproperty real percentage: 0.7')
+        result = self.runtime.run('''
+    Window { visible: true; width: 900; height: 700
+        Loader {
+            id: preview
+            Component.onCompleted: setSource("modules/ii/background/widgets/resources/ResourcesWidget.qml", {
+                screenWidth: 900, screenHeight: 700, scaledScreenWidth: 900, scaledScreenHeight: 700, wallpaperScale: 1
+            })
+        }
+    }
+    property int phase: 0
+    Timer { running: Config.ready; interval: 300; repeat: true
+        onTriggered: {
+            if (!preview.item) { console.error("UX_TEST_FAIL resource load"); Qt.quit(); return }
+            if (phase === 0) {
+                if (preview.item.implicitWidth !== 420 || preview.item.implicitHeight !== 120) { console.error("UX_TEST_FAIL original dimensions"); Qt.quit(); return }
+                Config.options.background.widgets.resources.showCpu = false;
+                Config.options.background.widgets.resources.thirdMetric = "none";
+                phase++; return;
+            }
+            if (phase === 1) {
+                if (preview.item.implicitWidth >= 420) { console.error("UX_TEST_FAIL hidden measurements"); Qt.quit(); return }
+                Config.options.background.widgets.resources.vertical = true;
+                Config.options.background.widgets.resources.showCpu = true;
+                Config.options.background.widgets.resources.thirdMetric = "disk";
+                phase++; return;
+            }
+            if (preview.item.implicitHeight <= 120 || preview.item.implicitWidth >= 420) { console.error("UX_TEST_FAIL vertical layout"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''', imports='import qs.modules.ii.background.widgets.resources\nimport qs.modules.ii.background.widgets\nimport qs.modules.common.widgets.widgetCanvas')
+        self.assert_pass(result)
+
+
+    def test_widget_combo_shows_current_value_and_handles_native_selection(self):
+        result = self.runtime.run('''
+    Window { visible: true; width: 900; height: 700
+        Loader { id: page; anchors.fill: parent; source: "modules/ii/settings/pages/WidgetsConfig.qml" }
+    }
+    function find(item, name) {
+        if (item.objectName === name) return item;
+        for (const child of item.children ?? []) { const match = find(child, name); if (match) return match; }
+        return null;
+    }
+    property int phase: 0
+    Timer { running: Config.ready; interval: 200; repeat: true
+        onTriggered: {
+            if (phase === 0) { DesktopWidgets.select("resources"); phase++; return }
+            const combo = find(page, "inline:desktop:Resources third metric");
+            if (!combo) { console.error("UX_TEST_FAIL resource combo"); Qt.quit(); return }
+            if (phase === 1) {
+                if (combo.displayText !== "Automatic: battery or disk") { console.error("UX_TEST_FAIL missing current label " + combo.displayText); Qt.quit(); return }
+                combo.activated(3); phase++; return;
+            }
+            if (combo.displayText !== "Hidden" || Config.options.background.widgets.resources.thirdMetric !== "none") { console.error("UX_TEST_FAIL native selection"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''')
+        self.assert_pass(result)
+
+
+    def test_bar_actions_fit_narrow_native_page_and_dashboard(self):
+        for width in (600, 810, 1100):
+            with self.subTest(width=width):
+                result = self.runtime.run('''
+    Window { visible: true; width: WIDTH; height: 1100
+        DashboardBarLayoutCard { id: editor; anchors.fill: parent }
+    }
+    function visit(item) {
+        if (item.objectName === "barAction" && item.visible) {
+            const point = item.mapToItem(editor, 0, 0);
+            if (point.x < -1 || point.x + item.width > editor.width + 1 || item.height < 20) return false;
+        }
+        return (item.children ?? []).every(visit);
+    }
+    Timer { running: Config.ready; interval: 150; onTriggered: { Translation.portuguese = true; editor.selectItem("workspaces", "left", 1); } }
+    Timer { running: true; interval: 600; onTriggered: {
+        if (!visit(editor)) { console.error("UX_TEST_FAIL clipped actions"); Qt.quit(); return }
+        console.log("UX_TEST_PASS"); Qt.quit();
+    } }
+'''.replace('WIDTH', str(width)))
+                self.assert_pass(result)
+
+
+    def test_media_layout_tracks_config_after_desktop_resize(self):
+        self.runtime.stub('MprisController', 'property var activePlayer: null\nproperty var players: []')
+        self.runtime.stub('LyricsService', 'property var slots: []\nproperty int before: 3\nproperty string status: "empty"')
+        dirs = self.runtime.root / 'modules/common/Directories.qml'
+        dirs.write_text(dirs.read_text().replace('Singleton {', 'Singleton {\nproperty string coverArt: "' + str(self.runtime.root / 'cover-art') + '"'))
+        result = self.runtime.run('''
+    Window { visible: true; width: 900; height: 700
+        Loader { id: preview; Component.onCompleted: setSource("modules/ii/background/widgets/media/MediaWidget.qml", {
+            screenWidth: 900, screenHeight: 700, scaledScreenWidth: 900, scaledScreenHeight: 700, wallpaperScale: 1
+        }) }
+    }
+    function findHandle(item) {
+        if (typeof item.resizedXY === "function") return item;
+        for (const child of item.children ?? []) { const match = findHandle(child); if (match) return match; }
+        return null;
+    }
+    property int phase: 0
+    Timer { running: Config.ready; interval: 250; repeat: true
+        onTriggered: {
+            if (!preview.item) { console.error("UX_TEST_FAIL media load"); Qt.quit(); return }
+            if (phase === 0) {
+                const handle = findHandle(preview.item);
+                if (!handle) { console.error("UX_TEST_FAIL resize handle"); Qt.quit(); return }
+                handle.resizedXY(-300, 0, 420); handle.resizeFinished();
+                Config.options.background.widgets.media.sizeMode = "2x3";
+                phase++; return;
+            }
+            if (preview.item.sizeMode !== "2x3" || preview.item.widgetWidth !== preview.item.snapWidth3) { console.error("UX_TEST_FAIL media config binding"); Qt.quit(); return }
+            console.log("UX_TEST_PASS"); Qt.quit();
+        }
+    }
+''', imports='import qs.modules.ii.background.widgets.media\nimport qs.modules.common.models\nimport qs.modules.ii.background.widgets\nimport qs.modules.common.widgets.widgetCanvas')
         self.assert_pass(result)
