@@ -21,6 +21,9 @@ The original screenshots and visual design are retained. See
 **Settings UX, phase 2 (local development):** [Audit](docs/UX_AUDIT.md) ·
 [Implementation plan](docs/UX_IMPLEMENTATION_PLAN.md) · [Delivery report](docs/UX_DELIVERY_REPORT.md).
 
+**Bar, dock and widgets (local development):** [Personalization guide / Guia](docs/personalization/USER_GUIDE.md) ·
+[Growth plan](docs/PERSONALIZATION_GROWTH_PLAN.md) · [Delivery and validation](docs/personalization/DELIVERY_1.md).
+
 </div>
 
 ---

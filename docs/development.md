@@ -90,3 +90,18 @@ a versão anterior; não é necessário apagar esta branch nem usar reset destru
 **English:** use `python3 scripts/run_checks.py`. Fixtures and runtime stubs
 are isolated from personal configuration. Headless checks do not replace the
 graphical acceptance matrix. Publication to the linked fork was explicitly authorized.
+
+## Personalização: barra, dock e widgets
+
+Consulte [o mapa de capacidades](personalization/CAPABILITIES.md),
+[o relatório incremental](personalization/DELIVERY_1.md) e
+[o guia PT/EN](personalization/USER_GUIDE.md). O editor de barra usa regras em
+BarLayout.js e estado/undo em BarLayout.qml; a interface não mantém uma segunda
+cópia persistente do layout. SettingsInlineControls reaproveita os accessors do
+catálogo atual. SettingsScreenSelection compartilha a semântica de lista vazia
+(todos os monitores) entre barra, dock e desktop. O esquema continua autoritativo.
+
+Os testes de recursos e mídia carregam os componentes consumidores reais em cenas
+isoladas, sem player/rede ativos. O teste de primeira execução carrega o serviço
+real com marcador existente. Testes com outros serviços simulados não comprovam
+a inicialização da shell completa nem o comportamento com o compositor real.
