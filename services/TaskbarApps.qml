@@ -13,11 +13,24 @@ Singleton {
     }
 
     function togglePin(appId) {
+        if (Config.blockWrites) return;
         if (root.isPinned(appId)) {
             Config.options.dock.pinnedApps = Config.options.dock.pinnedApps.filter(id => id !== appId)
         } else {
             Config.options.dock.pinnedApps = Config.options.dock.pinnedApps.concat([appId])
         }
+    }
+
+    function movePinned(appId, direction) {
+        if (Config.blockWrites || ![-1, 1].includes(direction)) return false;
+        const next = Array.from(Config.options.dock.pinnedApps);
+        const from = next.indexOf(appId);
+        const to = from + direction;
+        if (from < 0 || to < 0 || to >= next.length) return false;
+        next.splice(from, 1);
+        next.splice(to, 0, appId);
+        Config.options.dock.pinnedApps = next;
+        return true;
     }
 
     property list<var> apps: {

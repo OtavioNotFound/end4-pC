@@ -2,6 +2,13 @@
 
 // Presentation only. Stable control/config keys and their defaults stay upstream.
 var entries = {
+    "desktop:Resources CPU": { description: "The resource widget keeps its original three cards by default. These choices affect only this desktop widget.", keywords: "widget cpu desktop recursos processador" },
+    "desktop:Resources third metric": { description: "Chooses the third resource card. Automatic uses the battery when present and disk usage otherwise.", keywords: "widget battery disk bateria disco automático" },
+    "desktop:Media layout": { description: "Selects one of the media widget layouts already supported by the shell.", keywords: "widget music size mídia tamanho disposição" },
+    "bar:Reveal area width": { description: "Size of the pointer area that reveals the hidden bar. A wider area is easier to reach.", unit: "px", keywords: "bar reveal hover mouse barra ocultar área mouse", effect: "Immediate." },
+    "bar:Push windows when revealed": { description: "Reserves room for the bar while it is revealed. The hidden bar does not reserve space.", keywords: "bar overlap windows espaço janelas ocultar", effect: "Immediate." },
+    "bar:Reveal with Super": { description: "Reveals the hidden bar while you hold the Super key.", keywords: "bar super keyboard teclado revelar", effect: "Immediate." },
+    "bar:Super reveal delay": { description: "How long to hold Super before revealing the hidden bar.", unit: "ms", effect: "Immediate." },
     "interface:Glassy UI": { description: "Applies a glass effect to panels using the current wallpaper. Compositor blur is separate.", keywords: "glass glassy frosted vidro papel parede wallpaper blur", effect: "Immediate; requires a valid wallpaper image." },
     "interface:Transparency/Enable": { description: "Enables background transparency. Glassy UI is a separate effect.", keywords: "transparency opacity transparent transparência opacidade", effect: "Immediate." },
     "interface:Automatic (from wallpaper)": { description: "Adjusts background transparency from wallpaper colors and uses the original automatic content value. Manual values remain saved.", keywords: "automatic auto wallpaper automático transparência", effect: "Immediate." },

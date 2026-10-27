@@ -79,6 +79,16 @@ Singleton {
     }
 
     readonly property var controls: ({
+        "desktop:Resources vertical": root.optionSwitch("background.widgets.resources.vertical"),
+        "desktop:Resources CPU": root.optionSwitch("background.widgets.resources.showCpu"),
+        "desktop:Resources memory": root.optionSwitch("background.widgets.resources.showMemory"),
+        "desktop:Resources third metric": root.optionSelect("background.widgets.resources.thirdMetric", [
+            { displayName: Translation.tr("Automatic: battery or disk"), value: "auto" },
+            { displayName: Translation.tr("Battery"), value: "battery" },
+            { displayName: Translation.tr("Disk"), value: "disk" },
+            { displayName: Translation.tr("Hidden"), value: "none" }
+        ]),
+        "desktop:Media layout": root.optionSelect("background.widgets.media.sizeMode", ["1x1", "1x2", "1x3", "2x2", "2x3"].map(value => ({ displayName: value, value: value }))),
         "desktop:Preview wallpaper": root.optionSwitch("background.enableWallpaperPreview"),
         "desktop:Blur wall": root.optionSwitch("background.showBlur"),
         "desktop:Blur Size": root.optionSlider("background.blurRadius", 1, 64, [32], false),
@@ -286,6 +296,10 @@ Singleton {
             ]
         ),
 
+        "bar:Reveal area width": root.optionSpin("bar.autoHide.hoverRegionWidth", 1, 32, 1),
+        "bar:Push windows when revealed": root.optionSwitch("bar.autoHide.pushWindows"),
+        "bar:Reveal with Super": root.optionSwitch("bar.autoHide.showWhenPressingSuper.enable"),
+        "bar:Super reveal delay": root.optionSpin("bar.autoHide.showWhenPressingSuper.delay", 0, 1500, 10),
         "bar:Show Background": root.optionSwitch("bar.showBackground"),
         "bar:Overlap windows when center-only": root.optionSwitch("bar.centerOnlyReserveFrame"),
         "bar:Follow Frame Color": root.optionSwitch("bar.followFrameColor"),

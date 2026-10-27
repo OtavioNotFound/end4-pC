@@ -1,5 +1,7 @@
 pragma Singleton
 
+import QtQuick
+import QtQuick as QQ
 import qs.modules.common
 import qs.modules.common.functions
 import Quickshell
@@ -34,7 +36,7 @@ Singleton {
         Quickshell.execDetached(["bash", "-c", `qs -p '${root.welcomeQmlPath}'`])
     }
 
-    Connections {
+    QQ.Connections {
         target: Config
         function onReadyChanged() { if (Config.ready && root.welcomePending) root.handleFirstRun(); }
     }

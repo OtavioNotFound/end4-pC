@@ -464,6 +464,9 @@ Singleton {
 
                     property JsonObject resources: JsonObject {
                         property bool enable: false
+                        property bool showCpu: true
+                        property bool showMemory: true
+                        property string thirdMetric: "auto" // auto | battery | disk | none
                         property string placementStrategy: "free"
                         property real x: 400
                         property real y: 100
@@ -675,6 +678,7 @@ Singleton {
             }
 
             property JsonObject dock: JsonObject {
+                property list<string> screenList: [] // Empty preserves all-monitor behavior.
                 property bool enable: false
                 property bool showBackground: true
                 property string style: "float" // float | hug

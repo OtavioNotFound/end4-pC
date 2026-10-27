@@ -51,7 +51,7 @@ python3 scripts/preset_resources.py "$HOME/.config/illogical-impulse/config.json
 ```
 
 Não execute duas versões da shell contra essa configuração. Identifique a
-instância atual com `qs list`. Se ela usa o nome `ii`, pare **somente ela**:
+instância atual com `qs list --all`. Se ela usa o nome `ii`, pare **somente ela**:
 
 ```sh
 qs kill -c ii

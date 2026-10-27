@@ -40,7 +40,10 @@ Singleton {
     function conditionReason(when, requires) {
         if (requires && !root.usedWidgets.includes(requires))
             return Translation.tr("Add this widget to the bar layout to configure it here.")
+        if (["barautohide", "barsuper"].includes(when) && !Config.options.bar.autoHide.enable) return Translation.tr("Enable bar autohide to use this option.")
+        if (when === "barsuper" && !Config.options.bar.autoHide.showWhenPressingSuper.enable) return Translation.tr("Enable reveal with Super to use this delay.")
         if (when === "material" && ColorSchemes.current !== "") return Translation.tr("Select the Material color scheme to use this option.")
+        if (when === "dockmagnify" && Config.options.dock.position !== "bottom") return Translation.tr("Dock magnification is available only at the bottom edge.")
         if (when === "dockmagnify" && !Config.options.dock.magnify) return Translation.tr("Enable dock magnification to use this option.")
         if (when === "dockhug" && Config.options.dock.style !== "hug") return Translation.tr("Select the Hug dock style to use this option.")
         if (when === "dockfloat" && Config.options.dock.style !== "float") return Translation.tr("Select the Float dock style to use this option.")
@@ -60,6 +63,7 @@ Singleton {
 
     function disabledReason(key, when, requires) {
         if (Config.blockWrites) return Translation.tr("A preset is being applied. Wait for the operation to finish.")
+        if (key === "interface:Dock/Magnify" && Config.options.dock.position !== "bottom") return Translation.tr("Dock magnification is available only at the bottom edge.")
         const condition = root.conditionReason(when, requires)
         if (condition) return condition
         if (["interface:Transparency/Background", "interface:Transparency/Content"].includes(key)) {

@@ -128,7 +128,7 @@ for (const data of Object.values(Metadata.entries)) {
     def test_first_run_preserves_existing_wallpaper_and_waits_for_config(self):
         self.run_js('''
 const source = fs.readFileSync(rootPath+'/services/FirstRunExperience.qml','utf8');
-const body = source.slice(source.indexOf('function handleFirstRun()'),source.indexOf('    Connections {'));
+const body = source.slice(source.indexOf('function handleFirstRun()'),source.search(/    (?:[A-Za-z]+[.])?Connections [{]/));
 const calls = [];
 const root = {welcomePending:false,defaultWallpaperPath:'/default.png',welcomeQmlPath:'/welcome.qml'};
 const Config = {ready:false,options:{background:{wallpaperPath:'/existing.jpeg'}}};
@@ -144,7 +144,7 @@ assert.equal(calls[0][0],'/switchwall.sh');
     def test_section_only_navigation_uses_existing_page_api(self):
         self.run_js('''
 const source = fs.readFileSync(rootPath+'/modules/ii/settings/SettingsContent.qml','utf8');
-const code = source.slice(source.indexOf('function goToTarget('),source.indexOf('    Connections {'));
+const code = source.slice(source.indexOf('function goToTarget('),source.search(/    (?:[A-Za-z]+[.])?Connections [{]/));
 const calls = [];
 const root = {pages:[{id:'hyprland'}],currentPage:-1,showingProfile:true};
 const pagesRepeater = {itemAt: index => ({item:{goTo: (...args) => calls.push(args)}})};
@@ -153,4 +153,22 @@ navigate({page:'hyprland',label:'',section:'Displays',subsection:''});
 assert.equal(root.currentPage,0);
 assert.equal(root.showingProfile,false);
 assert.deepEqual(calls,[['','Displays','']]);
+''')
+
+
+    def test_bar_layout_rules_preserve_legacy_items_and_explain_restrictions(self):
+        self.run_js('''
+const rules = load('BarLayout.js');
+const original = {left:['unknown-legacy','workspaces'], middle:['clockWidget'], right:['sysTray']};
+const moved = rules.transfer(original, 'left', 1, 'right', 1, 'workspaces', false, 'pills');
+assert.deepEqual(Array.from(moved.lists.left), ['unknown-legacy']);
+assert.deepEqual(Array.from(original.left), ['unknown-legacy','workspaces']);
+assert(rules.transfer(original,'left',0,'right',0,'wrong-id',false,'pills').error);
+assert(rules.reason('dynamicIsland','middle',original,false,'pills',true).includes('itself'));
+assert(rules.reason('dynamicIsland','middle',{left:[],middle:[],right:[]},true,'pills',true).includes('horizontal'));
+assert(rules.reason('divisor','left',original,false,'pills',true).includes('transparent'));
+assert(rules.reason('sysTray','left',original,false,'pills',true).includes('already'));
+assert.equal(rules.reason('visualizer','left',{left:['visualizer'],middle:[],right:[]},false,'pills',true),'');
+assert.equal(rules.transfer(original,'left',0,'tray',0,'unknown-legacy',false,'pills').lists.left.length,1);
+assert(rules.transfer(original,'tray',0,'invalid',0,'media',false,'pills').error);
 ''')
